@@ -1,2 +1,27 @@
 ---
 # Role variables
+# O.S. dependencies for isntall, in amtega.packages role format
+python_os_dependencies:
+  all:
+    all:
+      yum-utils: present
+      gcc: present
+      openssl-devel: present
+      bzip2-devel: present
+      libffi-devel: present
+      make: present
+      findutils: present
+  centos:
+    7:
+      python-setuptools: present
+
+# Compile options for configure install
+python_compile_options:
+  - "--prefix={{ python_install_dir }}"
+  - "--enable-optimizations"
+
+# Download site info
+python_download_base_url: >-
+  https://www.python.org/ftp/python/{{ python_version }}/
+
+python_download_file: "Python-{{ python_version }}.tgz"

@@ -1,2 +1,19 @@
 ---
 # Role tasks
+
+- name: Test python installation
+  stat:
+    path: "{{ python_executable_file }}"
+  register: python_installation_check
+
+- name: Install python
+  include_tasks: install.yml
+  when:
+    - not python_installation_check.stat.exists
+    - python_state == "present"
+
+- name: Uninstall python
+  include_tasks: uninstall.yml
+  when:
+    - python_installation_check.stat.exists
+    - python_state == "absent"
