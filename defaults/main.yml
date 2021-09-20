@@ -2,34 +2,34 @@
 # Role default lower priority variables
 
 # Version to install / remove
+
 python_version: 3.9.7
 
 # State of python software. Can be present or absent
+
 python_state: present
 
 # Indicate if your system need proxy to download python. Take a look to the
 # amtega.proxy_client for further information.
+
 python_use_proxy: no
 
 # Download directorry
+
 python_source_download_dir: /tmp/python_source
 
-# Directory for uncompress and compile python
-python_source_compile_dir: >-
-  {{ python_source_download_dir }}/Python-{{ python_version }}
+# Compile options
+
+python_compile_options:
+  - "--enable-optimizations"
 
 # Directory that will contain the compiled binaries
+
 python_install_dir: "/opt/python-{{ python_version }}"
 
-# Python compiled binary
-python_executable_file: >-
-  {{ python_install_dir }}/bin/python{{ python_version.split('.')[0] }}
+# Artifact to download Python. Take a look to amtega.artifact role for further
+# details.
 
-# Pip compliled binary
-python_pip_executable_file: >-
-  {{ python_install_dir }}/bin/pip{{ python_version.split('.')[0] }}
-
-# Artifact to download Python. take a look to amtega.artifact role for furte details.
 python_artifact:
   id: python
   type: https

@@ -1,6 +1,5 @@
 ---
-# Role variables
-# O.S. dependencies for isntall, in amtega.packages role format
+
 python_os_dependencies:
   all:
     all:
@@ -15,13 +14,24 @@ python_os_dependencies:
     7:
       python-setuptools: present
 
-# Compile options for configure install
-python_compile_options:
-  - "--prefix={{ python_install_dir }}"
-  - "--enable-optimizations"
-
 # Download site info
+
 python_download_base_url: >-
   https://www.python.org/ftp/python/{{ python_version }}/
 
 python_download_file: "Python-{{ python_version }}.tgz"
+
+# Directory for uncompress and compile python
+
+python_source_compile_dir: >-
+  {{ python_source_download_dir }}/Python-{{ python_version }}
+
+# Python compiled binary
+
+python_executable_file: >-
+  {{ python_install_dir }}/bin/python{{ python_version.split('.')[0] }}
+
+# Pip compliled binary
+
+python_pip_executable_file: >-
+  {{ python_install_dir }}/bin/pip{{ python_version.split('.')[0] }}

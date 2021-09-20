@@ -1,19 +1,21 @@
 ---
 # Role install tasks
-- name: Configure proxy if needed
+
+- name: Setup proxy
   include_role:
     name: amtega.proxy_client
   vars:
     proxy_client_permanent: no
-  when: python_use_proxy
+  when: python_use_proxy | bool
+
 - block:
-    - name: Install python dependencies
+    - name: Setup python dependencies
       include_role:
         name: amtega.packages
       vars:
         packages_os: "{{ python_os_dependencies }}"
 
-    - name: Create source download dir
+    - name: Setup source download dir
       file:
         path: "{{ python_source_download_dir }}"
         state: directory
@@ -27,8 +29,12 @@
           state: present
         artifact: "{{ python_artifact | combine(overrides) }}"
 
-    - name: Prepare makefile
-      command: "./configure {{ python_compile_options | list | join(' ') }}"
+    - name: Configure compilation
+      command: >-
+        ./configure {{ (python_compile_options
+                        + ["--prefix=" + python_install_dir])
+                       | list
+                       | join(" ") }}
       args:
         chdir: "{{ python_source_compile_dir }}"
 
@@ -43,7 +49,7 @@
         state: present
         executable: "{{ python_pip_executable_file }}"
 
-    - name: Clean artifact
+    - name: Remove python source code
       include_role:
         name: amtega.artifact
       vars:
@@ -51,12 +57,12 @@
           state: absent
         artifact: "{{ python_artifact | combine(overrides) }}"
 
-    - name: Clean temporary source dirs
+    - name: Remove temporary source directories
       file:
-        path: "{{ source_dir }}"
+        path: "{{ python_source_dir }}"
         state: absent
       loop:
         - "{{ python_source_compile_dir }}"
         - "{{ python_source_download_dir }}"
       loop_control:
-        loop_var: source_dir
+        loop_var: python_source_dir
