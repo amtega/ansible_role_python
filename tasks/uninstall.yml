@@ -1,7 +1,7 @@
 ---
 # Role uninstall tasks
 
-- name: Remove python
+- name: Uninstall python
   file:
-    path: "{{ python_install_dir }}"
+    path: "{{ python_install_dir | default(python_default_install_dir) }}"
     state: absent
