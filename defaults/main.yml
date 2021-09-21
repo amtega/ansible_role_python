@@ -2,43 +2,42 @@
 # Role default lower priority variables
 
 # Version to install / remove
-python_version: 3.9.7
+
+python_version: latest
 
 # State of python software. Can be present or absent
+
 python_state: present
 
 # Indicate if your system need proxy to download python. Take a look to the
 # amtega.proxy_client for further information.
+
 python_use_proxy: no
 
 # Download directorry
+
 python_source_download_dir: /tmp/python_source
 
-# Directory for uncompress and compile python
-python_source_compile_dir: >-
-  {{ python_source_download_dir }}/Python-{{ python_version }}
+# Compile options
 
-# Directory that will contain the compiled binaries
-python_install_dir: "/opt/python-{{ python_version }}"
+python_compile_options:
+  - "--enable-optimizations"
 
-# Python compiled binary
-python_executable_file: >-
-  {{ python_install_dir }}/bin/python{{ python_version.split('.')[0] }}
+# Directory that will contain the compiled binaries. If not given will a
+# default one will be used
 
-# Pip compliled binary
-python_pip_executable_file: >-
-  {{ python_install_dir }}/bin/pip{{ python_version.split('.')[0] }}
+# python_install_dir:
 
-# Artifact to download Python. take a look to amtega.artifact role for furte details.
-python_artifact:
-  id: python
-  type: https
-  host: >-
-    {{ python_download_base_url | urlsplit('scheme')
-       + "://"
-       + python_download_base_url | urlsplit('hostname') }}
-  path: "{{ python_download_base_url | urlsplit('path') }}"
-  file: "{{ python_download_file }}"
-  dest: "{{ python_source_download_dir }}"
-  unarchive: yes
-  unarchive_remove: yes
+# By default, the role setups a default artifact that downloads the the desired
+# version (python_version) and stores this artifact in python_default_artifact
+# variable.
+#
+# If you want install from another site or a version not included in the version
+# archive page, you must provide an artifact variable with the download info for
+# .tar.gz binary you want deploy.
+#
+# Take a look to `amtega.artifact` role documentation to known about supported
+# types of artifacts, their specific settings and how to configure a proxy if
+# necessary
+
+# python_artifact:

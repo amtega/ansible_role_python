@@ -1,19 +1,34 @@
 ---
 # Role install tasks
-- name: Configure proxy if needed
+
+- name: Setup proxy
   include_role:
     name: amtega.proxy_client
   vars:
     proxy_client_permanent: no
-  when: python_use_proxy
+  when: python_use_proxy | bool
+
 - block:
-    - name: Install python dependencies
+    - block:
+        - name: Setup fact with default artifact
+          set_fact:
+            python_default_artifact: "{{ python_default_artifact }}"
+
+        - name: Setup fact with python latest versions
+          set_fact:
+            python_latest_versions: "{{ python_download_site_versions }}"
+      when: python_artifact is undefined or python_version == "latest"
+
+    - name: Gather package facts
+      package_facts:
+
+    - name: Setup python dependencies
       include_role:
         name: amtega.packages
       vars:
         packages_os: "{{ python_os_dependencies }}"
 
-    - name: Create source download dir
+    - name: Setup source download dir
       file:
         path: "{{ python_source_download_dir }}"
         state: directory
@@ -25,10 +40,19 @@
       vars:
         overrides:
           state: present
-        artifact: "{{ python_artifact | combine(overrides) }}"
+        artifact: >-
+          {{ python_artifact
+             | default(python_default_artifact)
+             | combine(overrides) }}
 
-    - name: Prepare makefile
-      command: "./configure {{ python_compile_options | list | join(' ') }}"
+    - name: Configure compilation
+      command: >-
+        ./configure {{ (python_compile_options
+                        + ["--prefix="
+                           + python_install_dir
+                             | default(python_default_install_dir)])
+                       | list
+                       | join(" ") }}
       args:
         chdir: "{{ python_source_compile_dir }}"
 
@@ -43,20 +67,40 @@
         state: present
         executable: "{{ python_pip_executable_file }}"
 
-    - name: Clean artifact
+  always:
+    - name: Remove python source code
       include_role:
         name: amtega.artifact
       vars:
         overrides:
           state: absent
-        artifact: "{{ python_artifact | combine(overrides) }}"
+        artifact: >-
+          {{ python_artifact
+             | default(python_default_artifact)
+             | combine(overrides) }}
 
-    - name: Clean temporary source dirs
+    - name: Remove temporary source directories
       file:
-        path: "{{ source_dir }}"
+        path: "{{ python_source_dir }}"
         state: absent
       loop:
         - "{{ python_source_compile_dir }}"
         - "{{ python_source_download_dir }}"
       loop_control:
-        loop_var: source_dir
+        loop_var: python_source_dir
+
+    - name: Remove packages used for build
+      package:
+        name: >-
+          {{ (python_os_dependencies
+              [ansible_facts.distribution | lower]
+              [ansible_facts.distribution_major_version | int]
+              | default({})).keys() | list
+             + (python_os_dependencies
+                [ansible_facts.distribution | lower].all
+                | default({})).keys() | list
+             + (python_os_dependencies.all.all | default({})).keys() | list
+             | difference(ansible_facts.packages.keys() | list) }}
+        state: absent
+
+  environment: "{{ proxy_client_environment | default({}) }}"

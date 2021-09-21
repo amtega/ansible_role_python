@@ -1,27 +1,23 @@
-# Ansible <!-- this role name --> role
+# Amtega openjdk role
 
-This is an [Ansible](http://www.ansible.com) role which compile and install Python fron source.
-
-## Requirements
-
-[Ansible 2.10+](http://docs.ansible.com/ansible/latest/intro_installation.html)
+This is an [Ansible](http://www.ansible.com) role to compile and install python from source code.
 
 ## Role Variables
 
 A list of all the default variables for this role is available in `defaults/main.yml`.
 
-## Usage
-
+## Example Playbook
 
 This is an example playbook:
 
-```yaml
+``` yaml
 ---
-
-- hosts: all
-  roles:
+- hosts: localhost
+  roles:  
     - role: amtega.python
-
+      vars:
+        python_version: 3.9.7
+        python_state: present
 ```
 
 ## Testing
@@ -31,6 +27,7 @@ Tests are based on [molecule with docker containers](https://molecule.readthedoc
 ```shell
 cd amtega.python
 
+molecule test --all
 ```
 
 ## License

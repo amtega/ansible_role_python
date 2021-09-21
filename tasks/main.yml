@@ -1,7 +1,7 @@
 ---
 # Role tasks
 
-- name: Test python installation
+- name: Check python installation
   stat:
     path: "{{ python_executable_file }}"
   register: python_installation_check
