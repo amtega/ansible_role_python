@@ -4,14 +4,17 @@
   hosts: molecule_hosts
   gather_facts: no
   tasks:
+    - name: Load role vars
+      include_vars: ../../vars/main.yml
+
     - name: Check python binary
       stat:
-        path: /opt/python-3.9.7/bin/python3.9
+        path: "{{ python_executable_file }}"
       register: python_binary_check
 
     - name: Check pip binary
       stat:
-        path: /opt/python-3.9.7/bin/pip3.9
+        path: "{{ python_pip_executable_file }}"
       register: python_pip_binary_check
 
     - name: Verify binary install

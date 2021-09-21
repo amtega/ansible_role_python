@@ -3,7 +3,7 @@
 
 # Version to install / remove
 
-python_version: 3.9.7
+python_version: latest
 
 # State of python software. Can be present or absent
 
@@ -23,22 +23,21 @@ python_source_download_dir: /tmp/python_source
 python_compile_options:
   - "--enable-optimizations"
 
-# Directory that will contain the compiled binaries
+# Directory that will contain the compiled binaries. If not given will a
+# default one will be used
 
-python_install_dir: "/opt/python-{{ python_version }}"
+# python_install_dir:
 
-# Artifact to download Python. Take a look to amtega.artifact role for further
-# details.
+# By default, the role setups a default artifact that downloads the the desired
+# version (python_version) and stores this artifact in python_default_artifact
+# variable.
+#
+# If you want install from another site or a version not included in the version
+# archive page, you must provide an artifact variable with the download info for
+# .tar.gz binary you want deploy.
+#
+# Take a look to `amtega.artifact` role documentation to known about supported
+# types of artifacts, their specific settings and how to configure a proxy if
+# necessary
 
-python_artifact:
-  id: python
-  type: https
-  host: >-
-    {{ python_download_base_url | urlsplit('scheme')
-       + "://"
-       + python_download_base_url | urlsplit('hostname') }}
-  path: "{{ python_download_base_url | urlsplit('path') }}"
-  file: "{{ python_download_file }}"
-  dest: "{{ python_source_download_dir }}"
-  unarchive: yes
-  unarchive_remove: yes
+# python_artifact:

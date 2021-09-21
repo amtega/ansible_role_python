@@ -1,37 +1,79 @@
 ---
 
+# Dependencies
+
 python_os_dependencies:
   all:
     all:
-      yum-utils: present
-      gcc: present
-      openssl-devel: present
       bzip2-devel: present
       libffi-devel: present
       make: present
       findutils: present
+      gcc: present
+      openssl-devel: present
+      tcl-devel: present
+      yum-utils: present
   centos:
     7:
       python-setuptools: present
 
-# Download site info
+# Download info
+
+python_download_site: https://www.python.org/ftp/python
 
 python_download_base_url: >-
-  https://www.python.org/ftp/python/{{ python_version }}/
+  {{ python_download_site
+     + "/"
+     + python_effective_version
+     + "/" }}
 
-python_download_file: "Python-{{ python_version }}.tgz"
+python_download_file: "Python-{{ python_effective_version }}.tgz"
 
-# Directory for uncompress and compile python
+python_download_site_content: >-
+  {{ lookup("url", python_download_site, wantlist=True) }}
+
+python_download_site_versions: >-
+  {{ python_download_site_content
+     | select("search", ">[0-9]+\.[0-9]\.?[0-9]*")
+     | map("regex_replace", ".*>([0-9]+\.[0-9]\.?[0-9]*).*", "\1")
+     | list }}
+
+python_download_site_last_version: "{{ python_download_site_versions | last }}"
+
+python_default_artifact:
+  id: python
+  type: https
+  host: >-
+    {{ python_download_base_url | urlsplit('scheme')
+       + "://"
+       + python_download_base_url | urlsplit('hostname') }}
+  path: "{{ python_download_base_url | urlsplit('path') }}"
+  file: "{{ python_download_file }}"
+  dest: "{{ python_source_download_dir }}"
+  unarchive: yes
+  unarchive_remove: yes
+
+# Version variables
+
+python_effective_version: >-
+  {{ (python_version == "latest")
+     | ternary(python_download_site_last_version, python_version) }}
+
+# Directories
 
 python_source_compile_dir: >-
-  {{ python_source_download_dir }}/Python-{{ python_version }}
+  {{ python_source_download_dir }}/Python-{{ python_effective_version }}
 
-# Python compiled binary
+python_default_install_dir: "/opt/python-{{ python_effective_version }}"
+
+# Executables
 
 python_executable_file: >-
-  {{ python_install_dir }}/bin/python{{ python_version.split('.')[0] }}
-
-# Pip compliled binary
+  {{ python_install_dir | default(python_default_install_dir)
+     + "/bin/python"
+     + python_effective_version.split('.')[0] }}
 
 python_pip_executable_file: >-
-  {{ python_install_dir }}/bin/pip{{ python_version.split('.')[0] }}
+  {{ python_install_dir | default(python_default_install_dir)
+     + "/bin/pip"
+     + python_effective_version.split('.')[0] }}

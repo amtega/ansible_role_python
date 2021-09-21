@@ -9,6 +9,19 @@
   when: python_use_proxy | bool
 
 - block:
+    - block:
+        - name: Setup fact with default artifact
+          set_fact:
+            python_default_artifact: "{{ python_default_artifact }}"
+
+        - name: Setup fact with python latest versions
+          set_fact:
+            python_latest_versions: "{{ python_download_site_versions }}"
+      when: python_artifact is undefined or python_version == "latest"
+
+    - name: Gather package facts
+      package_facts:
+
     - name: Setup python dependencies
       include_role:
         name: amtega.packages
@@ -27,12 +40,17 @@
       vars:
         overrides:
           state: present
-        artifact: "{{ python_artifact | combine(overrides) }}"
+        artifact: >-
+          {{ python_artifact
+             | default(python_default_artifact)
+             | combine(overrides) }}
 
     - name: Configure compilation
       command: >-
         ./configure {{ (python_compile_options
-                        + ["--prefix=" + python_install_dir])
+                        + ["--prefix="
+                           + python_install_dir
+                             | default(python_default_install_dir)])
                        | list
                        | join(" ") }}
       args:
@@ -49,13 +67,17 @@
         state: present
         executable: "{{ python_pip_executable_file }}"
 
+  always:
     - name: Remove python source code
       include_role:
         name: amtega.artifact
       vars:
         overrides:
           state: absent
-        artifact: "{{ python_artifact | combine(overrides) }}"
+        artifact: >-
+          {{ python_artifact
+             | default(python_default_artifact)
+             | combine(overrides) }}
 
     - name: Remove temporary source directories
       file:
@@ -66,3 +88,19 @@
         - "{{ python_source_download_dir }}"
       loop_control:
         loop_var: python_source_dir
+
+    - name: Remove packages used for build
+      package:
+        name: >-
+          {{ (python_os_dependencies
+              [ansible_facts.distribution | lower]
+              [ansible_facts.distribution_major_version | int]
+              | default({})).keys() | list
+             + (python_os_dependencies
+                [ansible_facts.distribution | lower].all
+                | default({})).keys() | list
+             + (python_os_dependencies.all.all | default({})).keys() | list
+             | difference(ansible_facts.packages.keys() | list) }}
+        state: absent
+
+  environment: "{{ proxy_client_environment | default({}) }}"
