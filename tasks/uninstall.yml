@@ -1,7 +1,6 @@
 ---
-# Role uninstall tasks
 
 - name: Uninstall python
-  file:
+  ansible.builtin.file:
     path: "{{ python_install_dir | default(python_default_install_dir) }}"
     state: absent

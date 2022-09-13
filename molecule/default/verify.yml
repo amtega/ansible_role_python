@@ -5,20 +5,20 @@
   gather_facts: no
   tasks:
     - name: Load role vars
-      include_vars: ../../vars/main.yml
+      ansible.builtin.include_vars: ../../vars/main.yml
 
     - name: Check python binary
-      stat:
+      ansible.builtin.stat:
         path: "{{ python_executable_file }}"
       register: python_binary_check
 
     - name: Check pip binary
-      stat:
+      ansible.builtin.stat:
         path: "{{ python_pip_executable_file }}"
       register: python_pip_binary_check
 
     - name: Verify binary install
-      assert:
+      ansible.builtin.assert:
         that:
           - python_binary_check.stat.exists
           - python_pip_binary_check.stat.exists

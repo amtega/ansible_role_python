@@ -1,41 +1,42 @@
 ---
-# Role install tasks
 
 - name: Setup proxy
-  include_role:
+  ansible.builtin.include_role:
     name: amtega.proxy_client
   vars:
     proxy_client_permanent: no
   when: python_use_proxy | bool
 
-- block:
-    - block:
+- name: Install python
+  block:
+    - name: Compile and install python
+      block:
         - name: Setup fact with default artifact
-          set_fact:
+          ansible.builtin.set_fact:
             python_default_artifact: "{{ python_default_artifact }}"
 
         - name: Setup fact with python latest versions
-          set_fact:
+          ansible.builtin.set_fact:
             python_latest_versions: "{{ python_download_site_versions }}"
       when: python_artifact is undefined or python_version == "latest"
 
     - name: Gather package facts
-      package_facts:
+      ansible.builtin.package_facts:
 
     - name: Setup python dependencies
-      include_role:
+      ansible.builtin.include_role:
         name: amtega.packages
       vars:
         packages_os: "{{ python_os_dependencies }}"
 
     - name: Setup source download dir
-      file:
+      ansible.builtin.file:
         path: "{{ python_source_download_dir }}"
         state: directory
         mode: 0755
 
     - name: Download python source code
-      include_role:
+      ansible.builtin.include_role:
         name: amtega.artifact
       vars:
         overrides:
@@ -46,7 +47,7 @@
              | combine(overrides) }}
 
     - name: Configure compilation
-      command: >-
+      ansible.builtin.command: >-
         ./configure {{ (python_compile_options
                         + ["--prefix="
                            + python_install_dir
@@ -55,21 +56,22 @@
                        | join(" ") }}
       args:
         chdir: "{{ python_source_compile_dir }}"
+      changed_when: yes
 
     - name: Compile and install python
-      command: make install
+      ansible.builtin.command: make install
       args:
         chdir: "{{ python_source_compile_dir }}"
+      changed_when: yes
 
     - name: Install virtualenv
-      pip:
+      ansible.builtin.pip:
         name: virtualenv
         state: present
         executable: "{{ python_pip_executable_file }}"
-
   always:
     - name: Remove python source code
-      include_role:
+      ansible.builtin.include_role:
         name: amtega.artifact
       vars:
         overrides:
@@ -80,7 +82,7 @@
              | combine(overrides) }}
 
     - name: Remove temporary source directories
-      file:
+      ansible.builtin.file:
         path: "{{ python_source_dir }}"
         state: absent
       loop:
@@ -90,7 +92,7 @@
         loop_var: python_source_dir
 
     - name: Remove packages used for build
-      package:
+      ansible.builtin.package:
         name: >-
           {{ (python_os_dependencies
               [ansible_facts.distribution | lower]
@@ -102,5 +104,4 @@
              + (python_os_dependencies.all.all | default({})).keys() | list
              | difference(ansible_facts.packages.keys() | list) }}
         state: absent
-
   environment: "{{ proxy_client_environment | default({}) }}"

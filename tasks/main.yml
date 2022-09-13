@@ -1,8 +1,7 @@
 ---
-# Role tasks
 
 - name: Check python installation
-  stat:
+  ansible.builtin.stat:
     path: "{{ python_executable_file }}"
   register: python_installation_check
 
