@@ -27,6 +27,7 @@ dependencies:
         centos: 7
         fedora: 34
         redhat: 7
+      check_platform_enabled: "{{ not python_force }}"
 
   - role: amtega.proxy_client
     tags:

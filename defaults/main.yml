@@ -41,3 +41,7 @@ python_compile_options:
 # necessary
 
 # python_artifact:
+
+# Force role execution. Useful for old systems where ansible cannot run
+
+python_force: no

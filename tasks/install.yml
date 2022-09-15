@@ -5,6 +5,7 @@
     name: amtega.proxy_client
   vars:
     proxy_client_permanent: no
+    proxy_client_support_el_6: no
   when: python_use_proxy | bool
 
 - name: Install python
@@ -20,55 +21,91 @@
             python_latest_versions: "{{ python_download_site_versions }}"
       when: python_artifact is undefined or python_version == "latest"
 
+
     - name: Gather package facts
-      ansible.builtin.package_facts:
+      ansible.builtin.raw: "rpm -q {{ python_os_dependencies | join(' ') }}"
+      register: python_gather_packages_result
+      changed_when: no
+      failed_when: no
+      environment:
+        LANGUAGE: en_US
 
     - name: Setup python dependencies
-      ansible.builtin.include_role:
-        name: amtega.packages
-      vars:
-        packages_os: "{{ python_os_dependencies }}"
+      ansible.builtin.raw: >-
+        /bin/bash -c
+        "
+        if [ -f /usr/bin/dnf ]; then
+        dnf install -y {{ python_os_dependencies | join(" ") }} ;
+        else
+        yum install -y  {{ python_os_dependencies | join(" ") }} ;
+        fi
+        "
+      register: python_install_deps_result
+      changed_when: >-
+        python_install_deps_result.stdout is not search("Nothing to do")
+      environment: "{{ proxy_client_environment | default({}) }}"
 
-    - name: Setup source download dir
-      ansible.builtin.file:
-        path: "{{ python_source_download_dir }}"
-        state: directory
-        mode: 0755
+    - name: Setup source download directory
+      ansible.builtin.raw: "mkdir -pv {{ python_source_download_dir }}"
+      args:
+        warn: no
+      register: python_setup_download_dir_result
+      changed_when: python_setup_download_dir_result.stdout_lines | length > 0
 
     - name: Download python source code
-      ansible.builtin.include_role:
-        name: amtega.artifact
+      ansible.builtin.raw: >-
+        bash -c
+        "
+        if [ -f {{ python_artifact_path }} ]; then
+        /bin/true ;
+        else
+        /usr/bin/curl
+        {{ python_download_base_url }}/{{ python_download_file }}
+        -o {{ python_artifact_path }} ;
+        fi
+        "
+      register: python_download_result
+      changed_when: python_download_result.stdout_lines | length > 0
       vars:
-        overrides:
-          state: present
-        artifact: >-
-          {{ python_artifact
-             | default(python_default_artifact)
-             | combine(overrides) }}
+        python_artifact_path: >-
+          {{ python_source_download_dir }}/{{ python_download_file }}
 
-    - name: Configure compilation
-      ansible.builtin.command: >-
+    - name: Configure python compilation
+      ansible.builtin.raw: >-
+        bash -c
+        "
+        cd {{ python_source_download_dir }} ;
+        /bin/tar -zxvf {{ python_download_file }} ;
+        cd {{ python_source_compile_dir }} ;
         ./configure {{ (python_compile_options
                         + ["--prefix="
                            + python_install_dir
                              | default(python_default_install_dir)])
                        | list
                        | join(" ") }}
-      args:
-        chdir: "{{ python_source_compile_dir }}"
+        "
       changed_when: yes
 
     - name: Compile and install python
-      ansible.builtin.command: make install
-      args:
-        chdir: "{{ python_source_compile_dir }}"
+      ansible.builtin.raw: >-
+        bash -c
+        "
+        cd {{ python_source_compile_dir }} ;
+        make install
+        "
       changed_when: yes
 
-    - name: Install virtualenv
-      ansible.builtin.pip:
-        name: virtualenv
-        state: present
-        executable: "{{ python_pip_executable_file }}"
+    - name: Install python virtualenv package
+      ansible.builtin.raw: >-
+        {{ python_pip_executable_file }} install virtualenv
+      register: python_install_virtualenv_result
+      changed_when: >-
+        python_install_virtualenv_result is search("Successfully installed")
+      environment:
+        LANGUAGE: en_US
+
+
+    - fail:
   always:
     - name: Remove python source code
       ansible.builtin.include_role:
