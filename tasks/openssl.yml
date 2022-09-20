@@ -1,0 +1,49 @@
+---
+
+# FIXME: skip for recent distros
+- name: Download openssl source code
+  ansible.builtin.raw: >-
+    /bin/bash -c
+    "
+    if [ -f {{ openssl_artifact_path }} ]; then
+    /bin/true ;
+    else
+    /usr/bin/curl {{ openssl_download_url }}
+    -o {{ openssl_artifact_path }} ;
+    fi
+    "
+  register: openssl_download_result
+  changed_when: openssl_download_result.stderr_lines | length > 0
+  vars:
+    openssl_artifact_path: >-
+      {{ python_source_download_dir }}/{{ openssl_download_file }}
+
+- name: Configure openssl compilation
+  ansible.builtin.raw: >-
+    /bin/bash -c
+    "
+    cd {{ python_source_download_dir }} ;
+    /bin/tar -zxvf {{ openssl_download_file }} ;
+    cd {{ openssl_source_compile_dir }} ;
+    ./config {{ (openssl_compile_options
+                  + ["--prefix="
+                    + openssl_install_dir
+                      | default(openssl_default_install_dir),
+                    "--openssldir="
+                    + openssl_install_dir
+                      | default(openssl_default_install_dir)])
+                | list
+                | join(" ") }}
+    "
+  changed_when: yes
+
+- name: Compile and install openssl
+  ansible.builtin.raw: >-
+    /bin/bash -c
+    "
+    export LANGUAGE=en_US ;
+    cd {{ openssl_source_compile_dir }} ;
+    make ;
+    make install
+    "
+  changed_when: yes

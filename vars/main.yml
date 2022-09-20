@@ -12,6 +12,7 @@ python_os_dependencies:
   - openssl-devel
   - tcl-devel
   - yum-utils
+  - perl                  # FIXME: only for openssl
   - python-setuptools
 
 # Download info
@@ -37,6 +38,23 @@ python_download_site_versions: >-
 
 python_download_site_last_version: "{{ python_download_site_versions | last }}"
 
+openssl_download_site: https://www.openssl.org/source
+
+openssl_download_site_content: >-
+  {{ lookup("url", openssl_download_site, wantlist=True) }}
+
+openssl_download_file: >-
+  {{ openssl_download_site_content
+     | select("search", ".*openssl-1.*tar.gz.*")
+     | map("regex_replace", ".*href=.(openssl-1.*.tar.gz).*", "\1")
+     | list
+     | first }}
+
+openssl_download_file_without_ext: >-
+  {{ openssl_download_file | regex_replace("\.tar\.gz", "") }}
+
+openssl_download_url: "{{ openssl_download_site }}/{{ openssl_download_file }}"
+
 # FIXME
 
 python_default_artifact:
@@ -58,6 +76,11 @@ python_effective_version: >-
   {{ (python_version == "latest")
      | ternary(python_download_site_last_version, python_version) }}
 
+openssl_effective_version: >-
+  {{ (openssl_version == "latest")
+     | ternary(openssl_download_file_without_ext
+               | regex_replace(".*-(.*)", "\1"), openssl_version) }}
+
 # Directories
 
 python_source_compile_dir: >-
@@ -65,14 +88,21 @@ python_source_compile_dir: >-
 
 python_default_install_dir: "/opt/python-{{ python_effective_version }}"
 
+openssl_source_compile_dir: >-
+  {{ python_source_download_dir
+     + "/"
+     + openssl_download_file_without_ext }}
+
+openssl_default_install_dir: "/opt/openssl-{{ openssl_effective_version }}"
+
 # Executables
 
 python_executable_file: >-
   {{ python_install_dir | default(python_default_install_dir)
      + "/bin/python"
-     + python_effective_version.split('.')[0] }}
+     + python_effective_version.split(".")[0] }}
 
 python_pip_executable_file: >-
   {{ python_install_dir | default(python_default_install_dir)
      + "/bin/pip"
-     + python_effective_version.split('.')[0] }}
+     + python_effective_version.split(".")[0] }}

@@ -23,12 +23,16 @@
 
 
     - name: Gather package facts
-      ansible.builtin.raw: "rpm -q {{ python_os_dependencies | join(' ') }}"
+      ansible.builtin.raw: >-
+        /bin/bash -c
+        "
+        export LANGUAGE=en_US ;
+        rpm -q {{ python_os_dependencies | join(' ') }}
+        "
       register: python_gather_packages_result
       changed_when: no
       failed_when: no
-      environment:
-        LANGUAGE: en_US
+
 
     - name: Setup python dependencies
       ansible.builtin.raw: >-
@@ -52,9 +56,12 @@
       register: python_setup_download_dir_result
       changed_when: python_setup_download_dir_result.stdout_lines | length > 0
 
+    - name: Install openssl
+      ansible.builtin.include_tasks: openssl.yml
+
     - name: Download python source code
       ansible.builtin.raw: >-
-        bash -c
+        /bin/bash -c
         "
         if [ -f {{ python_artifact_path }} ]; then
         /bin/true ;
@@ -65,14 +72,14 @@
         fi
         "
       register: python_download_result
-      changed_when: python_download_result.stdout_lines | length > 0
+      changed_when: python_download_result.stderr_lines | length > 0
       vars:
         python_artifact_path: >-
           {{ python_source_download_dir }}/{{ python_download_file }}
 
     - name: Configure python compilation
       ansible.builtin.raw: >-
-        bash -c
+        /bin/bash -c
         "
         cd {{ python_source_download_dir }} ;
         /bin/tar -zxvf {{ python_download_file }} ;
@@ -80,7 +87,10 @@
         ./configure {{ (python_compile_options
                         + ["--prefix="
                            + python_install_dir
-                             | default(python_default_install_dir)])
+                             | default(python_default_install_dir)]
+                        + ["--with-openssl="
+                           + openssl_install_dir
+                             | default(openssl_default_install_dir)])
                        | list
                        | join(" ") }}
         "
@@ -88,12 +98,18 @@
 
     - name: Compile and install python
       ansible.builtin.raw: >-
-        bash -c
+        /bin/bash -c
         "
+        export PATH={{ openssl_default_install_dir }}/bin:$PATH ;
+        export LD_LIBRARY_PATH={{ openssl_default_install_dir }}/lib ;
+        export LD_FLAGS=-L{{ openssl_default_install_dir }}/lib -Wl,-rpath,{{ openssl_default_install_dir }}/lib
+        export LANGUAGE=en_US ;
         cd {{ python_source_compile_dir }} ;
         make install
         "
       changed_when: yes
+
+    - fail:
 
     - name: Install python virtualenv package
       ansible.builtin.raw: >-
@@ -101,8 +117,6 @@
       register: python_install_virtualenv_result
       changed_when: >-
         python_install_virtualenv_result is search("Successfully installed")
-      environment:
-        LANGUAGE: en_US
 
 
     - fail:

@@ -4,6 +4,7 @@
 # Version to install / remove
 
 python_version: latest
+openssl_version: latest
 
 # State of python software. Can be present or absent
 
@@ -22,6 +23,10 @@ python_source_download_dir: /tmp/python_source
 
 python_compile_options:
   - "--enable-optimizations"
+
+openssl_compile_options:
+  - "no-ssl2"
+
 
 # Directory that will contain the compiled binaries. If not given will a
 # default one will be used
