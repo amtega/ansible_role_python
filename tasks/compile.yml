@@ -1,0 +1,10 @@
+---
+
+- name: Setip development tools
+  ansible.builtin.include_tasks: install_dev_tools.yml
+
+- name: Compile openssl
+  ansible.builtin.include_tasks: compile_openssl.yml
+
+- name: Compile python
+  ansible.builtin.include_tasks: compile_python.yml

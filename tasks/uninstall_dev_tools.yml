@@ -1,0 +1,38 @@
+---
+
+# FIXME: Implement only with raw
+
+- name: Remove python source code
+  ansible.builtin.include_role:
+    name: amtega.artifact
+  vars:
+    overrides:
+      state: absent
+    artifact: >-
+      {{ python_artifact
+          | default(python_default_artifact)
+          | combine(overrides) }}
+
+- name: Remove temporary source directories
+  ansible.builtin.file:
+    path: "{{ python_source_dir }}"
+    state: absent
+  loop:
+    - "{{ python_source_compile_dir }}"
+    - "{{ python_source_download_dir }}"
+  loop_control:
+    loop_var: python_source_dir
+
+- name: Remove packages used for build
+  ansible.builtin.package:
+    name: >-
+      {{ (python_os_dependencies
+          [ansible_facts.distribution | lower]
+          [ansible_facts.distribution_major_version | int]
+          | default({})).keys() | list
+          + (python_os_dependencies
+            [ansible_facts.distribution | lower].all
+            | default({})).keys() | list
+          + (python_os_dependencies.all.all | default({})).keys() | list
+          | difference(ansible_facts.packages.keys() | list) }}
+    state: absent

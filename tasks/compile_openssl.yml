@@ -1,6 +1,5 @@
 ---
 
-# FIXME: skip for recent distros
 - name: Download openssl source code
   ansible.builtin.raw: >-
     /bin/bash -c
