@@ -1,13 +1,5 @@
 ---
 
-- name: Setup proxy
-  ansible.builtin.include_role:
-    name: amtega.proxy_client
-  vars:
-    proxy_client_permanent: no
-    proxy_client_support_el_6: no
-  when: python_use_proxy | bool
-
 - name: Compile python
   block:
     - name: Compile and install python
@@ -76,6 +68,7 @@
       ansible.builtin.raw: >-
         /bin/bash -c
         "
+        {{ python_compilation_env }} ;
         cd {{ python_source_download_dir }} ;
         /bin/tar -zxvf {{ python_download_file }} ;
         cd {{ python_source_compile_dir }} ;
@@ -95,16 +88,11 @@
       ansible.builtin.raw: >-
         /bin/bash -c
         "
-        export PATH={{ openssl_default_install_dir }}/bin:$PATH ;
-        export LD_LIBRARY_PATH={{ openssl_default_install_dir }}/lib ;
-        export LD_FLAGS=-L{{ openssl_default_install_dir }}/lib -Wl,-rpath,{{ openssl_default_install_dir }}/lib
-        export LANGUAGE=en_US ;
+        {{ python_compilation_env }} ;
         cd {{ python_source_compile_dir }} ;
         make install
         "
       changed_when: yes
-
-    - fail:
 
     - name: Install python virtualenv package
       ansible.builtin.raw: >-
@@ -150,4 +138,7 @@
              + (python_os_dependencies.all.all | default({})).keys() | list
              | difference(ansible_facts.packages.keys() | list) }}
         state: absent
+  rescue:
+    - name: Rescue cleanup
+      ansible.builtin.include_tasks: rescue.yml
   environment: "{{ proxy_client_environment | default({}) }}"

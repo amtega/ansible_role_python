@@ -1,6 +1,14 @@
 ---
 
-- name: Setip development tools
+- name: Setup proxy
+  ansible.builtin.include_role:
+    name: amtega.proxy_client
+  vars:
+    proxy_client_permanent: no
+    proxy_client_support_el_6: no
+  when: python_use_proxy | bool
+
+- name: Setup development tools
   ansible.builtin.include_tasks: install_dev_tools.yml
 
 - name: Compile openssl

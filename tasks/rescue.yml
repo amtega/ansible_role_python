@@ -1,0 +1,8 @@
+---
+
+- name: Uninstall development tools
+  ansible.builtin.include_tasks: uninstall_dev_tools.yml
+
+- name: Stop role
+  ansible.builtin.fail:
+    msg: Cannot install development tools

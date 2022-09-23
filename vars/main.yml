@@ -106,3 +106,11 @@ python_pip_executable_file: >-
   {{ python_install_dir | default(python_default_install_dir)
      + "/bin/pip"
      + python_effective_version.split(".")[0] }}
+
+# Compilation vars
+
+python_compilation_env: >-
+  export PATH={{ openssl_default_install_dir }}/bin:$PATH ;
+  export LD_LIBRARY_PATH={{ openssl_default_install_dir }}/lib ;
+  export LD_FLAGS='-L{{ openssl_default_install_dir }}/lib -Wl,-rpath,{{ openssl_default_install_dir }}/lib' ;
+  export LANGUAGE=en_US

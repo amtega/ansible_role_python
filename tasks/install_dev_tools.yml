@@ -27,7 +27,7 @@
       changed_when: >-
         python_install_deps_result.stdout is not search("Nothing to do")
       environment: "{{ proxy_client_environment | default({}) }}"
-  always:
-    - name: Uninstall development tools
-      ansible.builtin.include_tasks: uninstall_dev_tools.yml
+  rescue:
+    - name: Rescue cleanup
+      ansible.builtin.include_tasks: rescue.yml
   environment: "{{ proxy_client_environment | default({}) }}"
