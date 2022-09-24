@@ -12,7 +12,7 @@ python_os_dependencies:
   - openssl-devel
   - tcl-devel
   - yum-utils
-  - perl                  # FIXME: only for openssl
+  - perl
   - python-setuptools
 
 # Download info
@@ -112,5 +112,9 @@ python_pip_executable_file: >-
 python_compilation_env: >-
   export PATH={{ openssl_default_install_dir }}/bin:$PATH ;
   export LD_LIBRARY_PATH={{ openssl_default_install_dir }}/lib ;
-  export LD_FLAGS='-L{{ openssl_default_install_dir }}/lib -Wl,-rpath,{{ openssl_default_install_dir }}/lib' ;
+  export LD_FLAGS='-L{{ openssl_default_install_dir }}/lib
+  -Wl,-rpath,{{ openssl_default_install_dir }}/lib' ;
   export LANGUAGE=en_US
+
+python_ld_conf_path: >-
+  /etc/ld.so.conf.d/{{ python_openssl_ld_conf_file_name }}

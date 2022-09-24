@@ -1,7 +1,7 @@
 ---
 
-- name: Uninstall development tools
-  ansible.builtin.include_tasks: uninstall_dev_tools.yml
+- name: Clean compilation artifacts
+  ansible.builtin.include_tasks: clean.yml
 
 - name: Stop role
   ansible.builtin.fail:

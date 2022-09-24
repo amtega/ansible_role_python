@@ -8,11 +8,14 @@
     proxy_client_support_el_6: no
   when: python_use_proxy | bool
 
-- name: Setup development tools
-  ansible.builtin.include_tasks: install_dev_tools.yml
+- name: Prepare compilation
+  ansible.builtin.include_tasks: prepare.yml
 
 - name: Compile openssl
   ansible.builtin.include_tasks: compile_openssl.yml
 
 - name: Compile python
   ansible.builtin.include_tasks: compile_python.yml
+
+- name: Clean after compilation
+  ansible.builtin.include_tasks: clean.yml

@@ -27,6 +27,8 @@ python_compile_options:
 openssl_compile_options:
   - "no-ssl2"
 
+python_openssl_ld_conf_file_name: ansible_python_openssl.conf
+
 
 # Directory that will contain the compiled binaries. If not given will a
 # default one will be used

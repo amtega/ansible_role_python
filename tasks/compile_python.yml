@@ -28,6 +28,7 @@
       ansible.builtin.raw: >-
         /bin/bash -c
         "
+        export LANGUAGE=en_US ;
         if [ -f /usr/bin/dnf ]; then
         dnf install -y {{ python_os_dependencies | join(" ") }} ;
         else
@@ -96,48 +97,14 @@
 
     - name: Install python virtualenv package
       ansible.builtin.raw: >-
+        /bin/bash -c
+        "
+        export LANGUAGE=en_US ;
         {{ python_pip_executable_file }} install virtualenv
+        "
       register: python_install_virtualenv_result
       changed_when: >-
         python_install_virtualenv_result is search("Successfully installed")
-
-
-    - fail:
-  always:
-    - name: Remove python source code
-      ansible.builtin.include_role:
-        name: amtega.artifact
-      vars:
-        overrides:
-          state: absent
-        artifact: >-
-          {{ python_artifact
-             | default(python_default_artifact)
-             | combine(overrides) }}
-
-    - name: Remove temporary source directories
-      ansible.builtin.file:
-        path: "{{ python_source_dir }}"
-        state: absent
-      loop:
-        - "{{ python_source_compile_dir }}"
-        - "{{ python_source_download_dir }}"
-      loop_control:
-        loop_var: python_source_dir
-
-    - name: Remove packages used for build
-      ansible.builtin.package:
-        name: >-
-          {{ (python_os_dependencies
-              [ansible_facts.distribution | lower]
-              [ansible_facts.distribution_major_version | int]
-              | default({})).keys() | list
-             + (python_os_dependencies
-                [ansible_facts.distribution | lower].all
-                | default({})).keys() | list
-             + (python_os_dependencies.all.all | default({})).keys() | list
-             | difference(ansible_facts.packages.keys() | list) }}
-        state: absent
   rescue:
     - name: Rescue cleanup
       ansible.builtin.include_tasks: rescue.yml

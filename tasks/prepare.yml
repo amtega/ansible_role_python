@@ -1,0 +1,48 @@
+---
+
+- name: Install development tools
+  block:
+    - name: Setup source download directory
+      ansible.builtin.raw: "mkdir -pv {{ python_source_download_dir }}"
+      args:
+        warn: no
+      register: python_setup_download_dir_result
+      changed_when: python_setup_download_dir_result.stdout_lines | length > 0
+
+    - name: Gather packages
+      ansible.builtin.raw: >-
+        /bin/bash -c
+        "
+        export LANGUAGE=en_US ;
+        if [ ! -f {{ python_source_download_dir }}/packages ]; then
+        rpm -q --queryformat='%{NAME}\n'
+        {{ python_os_dependencies | join(' ') }}
+        > {{ python_source_download_dir }}/packages ;
+        sed -i '/is not installed/d' {{ python_source_download_dir }}/packages ;
+        fi ;
+        cat {{ python_source_download_dir }}/packages
+        "
+      register: python_gather_packages_result
+      changed_when: yes
+
+    - name: Setup development tools
+      ansible.builtin.raw: >-
+        /bin/bash -c
+        "
+        if [ -f /usr/bin/dnf ]; then
+        dnf install -y {{ python_dev_package }} ;
+        else
+        yum install -y {{ python_dev_package }} ;
+        fi
+        "
+      register: python_install_dev_tools_result
+      changed_when: >-
+        python_install_dev_tools_result.stdout is not search("Nothing to do")
+      loop: "{{ python_os_dependencies }}"
+      loop_control:
+        loop_var: python_dev_package
+      environment: "{{ proxy_client_environment | default({}) }}"
+  rescue:
+    - name: Rescue cleanup
+      ansible.builtin.include_tasks: rescue.yml
+  environment: "{{ proxy_client_environment | default({}) }}"

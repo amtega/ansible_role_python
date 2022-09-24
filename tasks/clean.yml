@@ -1,0 +1,38 @@
+---
+
+- name: Remove source download directory
+  ansible.builtin.raw: "rm -Rfv {{ python_source_download_dir }}"
+  args:
+    warn: no
+  register: python_remove_source_result
+  changed_when: python_remove_source_result.stdout_lines | length > 0
+
+- name: Remove python openssl ld config file
+  ansible.builtin.raw: "rm -fv {{ python_ld_conf_path }}"
+  args:
+    warn: no
+  register: python_remove_ld_conf_result
+  changed_when: python_remove_ld_conf_result.stdout_lines | length > 0
+
+- name: Remove development tools
+  ansible.builtin.raw: >-
+    /bin/bash -c
+    "
+    export LANGUAGE=en_US ;
+    if [ -f /usr/bin/dnf ]; then
+    dnf remove -y {{ python_dev_package }} ;
+    else
+    yum remove -y {{ python_dev_package }} ;
+    fi
+    "
+  when: python_dev_package not in python_gather_packages_result.stdout_lines
+  register: python_remove_dev_tools_result
+  changed_when: >-
+    python_remove_dev_tools_result.stdout is not search("Nothing to do")
+  failed_when: >-
+    python_remove_dev_tools_result.rc != 0
+    and python_remove_dev_tools_result.stderr
+        is not search("which is protected")
+  loop: "{{ python_os_dependencies }}"
+  loop_control:
+    loop_var: python_dev_package

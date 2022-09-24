@@ -45,7 +45,6 @@
         "
       changed_when: yes
 
-    # FIXME: Delete ld.config in clean
     - name: Compile and install openssl
       ansible.builtin.raw: >-
         /bin/bash -c
@@ -55,7 +54,7 @@
         make ;
         make install ;
         echo "{{ openssl_default_install_dir }}/lib"
-        > /etc/ld.so.conf.d/ansible_python_openssl.conf ;
+        > {{ python_ld_conf_path }} ;
         ldconfig
         "
       changed_when: yes
