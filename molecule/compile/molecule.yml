@@ -62,6 +62,7 @@ provisioner:
         vars:
           python_version: latest
           python_state: present
+          python_use_os_packages: no
       molecule_hosts_fedora:
         vars:
           ansible_python_interpreter: /usr/bin/python3

@@ -3,7 +3,7 @@
 - name: Install development tools
   block:
     - name: Setup source download directory
-      ansible.builtin.raw: "mkdir -pv {{ python_source_download_dir }}"
+      ansible.builtin.raw: "mkdir -pv {{ python_tmp_dir }}"
       args:
         warn: no
       register: python_setup_download_dir_result
@@ -14,13 +14,13 @@
         /bin/bash -c
         "
         export LANGUAGE=en_US ;
-        if [ ! -f {{ python_source_download_dir }}/packages ]; then
+        if [ ! -f {{ python_tmp_dir }}/packages ]; then
         rpm -q --queryformat='%{NAME}\n'
         {{ python_os_dependencies | join(' ') }}
-        > {{ python_source_download_dir }}/packages ;
-        sed -i '/is not installed/d' {{ python_source_download_dir }}/packages ;
+        > {{ python_tmp_dir }}/packages ;
+        sed -i '/is not installed/d' {{ python_tmp_dir }}/packages ;
         fi ;
-        cat {{ python_source_download_dir }}/packages
+        cat {{ python_tmp_dir }}/packages
         "
       register: python_gather_packages_result
       changed_when: yes

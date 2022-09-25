@@ -1,6 +1,38 @@
 ---
 
-- name: Uninstall python
-  ansible.builtin.file:
-    path: "{{ python_install_dir | default(python_default_install_dir) }}"
-    state: absent
+- name: Remove python openssl ld config file
+  ansible.builtin.include_tasks: clean_ld_config.yml
+
+- name: Uninstall compiled python / openssl
+  ansible.builtin.raw: >-
+    bash -c
+    "
+    rm -Rfv
+    {{ python_compiled_install_dir
+       | default(python_default_install_dir) }} ;
+    rm -Rfv {{ openssl_compiled_install_dir
+       | default(openssl_default_install_dir) }}
+    "
+  when: >-
+    python_distribution_version is version("7", "<")
+    or not python_use_os_packages | bool
+  register: python_uninstall_compiled_result
+  changed_when: python_uninstall_compiled_result.stdout_lines | length > 0
+
+- name: Uninstall python operating system package
+  ansible.builtin.raw: >-
+    /bin/bash -c
+    "
+    export LANGUAGE=en_US ;
+    if [ -f /usr/bin/dnf ]; then
+    dnf remove -y python3 ;
+    else
+    yum remove -y python3 ;
+    fi
+    "
+  register: python_uninstall_package_result
+  when:
+    - python_use_os_packages | bool
+    - python_distribution_version is version("7", ">=")
+  changed_when: >-
+    python_uninstall_package_result.stdout is search("Removed:")

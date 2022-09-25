@@ -1,0 +1,59 @@
+---
+
+- name: Verify python and pip
+  hosts: molecule_hosts:!molecule_hosts_centos_6
+  gather_facts: no
+  tasks:
+    - name: Check python
+      ansible.builtin.command: /usr/bin/python3 --version
+      changed_when: no
+
+    - name: Check pip
+      ansible.builtin.command: /usr/bin/pip3 --version
+      changed_when: no
+
+- name: Verify virtualenv in EL hosts
+  hosts: molecule_hosts:!molecule_hosts_centos_6:!molecule_hosts_fedora
+  gather_facts: no
+  tasks:
+    - name: Check virtualenv
+      ansible.builtin.command: /usr/bin/virtualenv-3 --version
+      changed_when: no
+
+- name: Verify virtualenv in fedora hosts
+  hosts: molecule_hosts_fedora
+  gather_facts: no
+  tasks:
+    - name: Check virtualenv
+      ansible.builtin.command: /usr/bin/virtualenv --version
+      changed_when: no
+
+- name: CentOS 6 verify
+  hosts: molecule_hosts_centos_6
+  gather_facts: no
+  tasks:
+    - name: Load role vars
+      ansible.builtin.include_vars: ../../vars/main.yml
+
+    - name: Check python binary
+      ansible.builtin.stat:
+        path: "{{ python_executable_file_path }}"
+      register: python_binary_check
+
+    - name: Check pip binary
+      ansible.builtin.stat:
+        path: "{{ python_pip_executable_path }}"
+      register: python_pip_binary_check
+
+    - name: Verify binary install
+      ansible.builtin.assert:
+        that:
+          - python_binary_check.stat.exists
+          - python_pip_binary_check.stat.exists
+
+    - name: Verify binary locations
+      ansible.builtin.assert:
+        that: python_executable_file_path is search("/opt")
+        quiet: yes
+  vars:
+    ansible_python_interpreter: "{{ python_executable_file_path }}"

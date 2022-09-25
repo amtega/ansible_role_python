@@ -55,41 +55,28 @@ openssl_download_file_without_ext: >-
 
 openssl_download_url: "{{ openssl_download_site }}/{{ openssl_download_file }}"
 
-# FIXME
-
-python_default_artifact:
-  id: python
-  type: https
-  host: >-
-    {{ python_download_base_url | urlsplit('scheme')
-       + "://"
-       + python_download_base_url | urlsplit('hostname') }}
-  path: "{{ python_download_base_url | urlsplit('path') }}"
-  file: "{{ python_download_file }}"
-  dest: "{{ python_source_download_dir }}"
-  unarchive: yes
-  unarchive_remove: yes
-
 # Version variables
+
+python_minimum_version: 3.5.0
 
 python_effective_version: >-
   {{ (python_version == "latest")
      | ternary(python_download_site_last_version, python_version) }}
 
 openssl_effective_version: >-
-  {{ (openssl_version == "latest")
+  {{ (python_openssl_version == "latest")
      | ternary(openssl_download_file_without_ext
-               | regex_replace(".*-(.*)", "\1"), openssl_version) }}
+               | regex_replace(".*-(.*)", "\1"), python_openssl_version) }}
 
 # Directories
 
 python_source_compile_dir: >-
-  {{ python_source_download_dir }}/Python-{{ python_effective_version }}
+  {{ python_tmp_dir }}/Python-{{ python_effective_version }}
 
 python_default_install_dir: "/opt/python-{{ python_effective_version }}"
 
 openssl_source_compile_dir: >-
-  {{ python_source_download_dir
+  {{ python_tmp_dir
      + "/"
      + openssl_download_file_without_ext }}
 
@@ -97,24 +84,47 @@ openssl_default_install_dir: "/opt/openssl-{{ openssl_effective_version }}"
 
 # Executables
 
-python_executable_file: >-
-  {{ python_install_dir | default(python_default_install_dir)
+python_executable_file_path: >-
+  {{ python_compiled_install_dir | default(python_default_install_dir)
      + "/bin/python"
      + python_effective_version.split(".")[0] }}
 
-python_pip_executable_file: >-
-  {{ python_install_dir | default(python_default_install_dir)
+python_pip_executable_path: >-
+  {{ python_compiled_install_dir | default(python_default_install_dir)
      + "/bin/pip"
+     + python_effective_version.split(".")[0] }}
+
+python_virtualenv_executable_path: >-
+  {{ python_compiled_install_dir | default(python_default_install_dir)
+     + "/bin/virtualenv"
      + python_effective_version.split(".")[0] }}
 
 # Compilation vars
 
-python_compilation_env: >-
+python_openssl_compile_env: >-
   export PATH={{ openssl_default_install_dir }}/bin:$PATH ;
   export LD_LIBRARY_PATH={{ openssl_default_install_dir }}/lib ;
   export LD_FLAGS='-L{{ openssl_default_install_dir }}/lib
   -Wl,-rpath,{{ openssl_default_install_dir }}/lib' ;
   export LANGUAGE=en_US
 
+python_compile_env: >-
+  {{ (python_distribution_version is ("7", "<"))
+     | ternary(python_openssl_compile_env, "/bin/true") }}
+
+python_openssl_compile_options: >-
+  {{ "--with-openssl="
+     + openssl_compiled_install_dir
+       | default(openssl_default_install_dir) }}
+
+python_extra_compile_options: >-
+  {{ (python_distribution_version is ("7", "<"))
+     | ternary([python_openssl_compile_options], []) }}
+
 python_ld_conf_path: >-
   /etc/ld.so.conf.d/{{ python_openssl_ld_conf_file_name }}
+
+# Misc vars
+
+python_install_required: >-
+  {{ }}

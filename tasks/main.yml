@@ -1,21 +1,14 @@
 ---
 
-# - name: Check python installation
-#   ansible.builtin.stat:
-#     path: "{{ python_executable_file }}"
-#   register: python_installation_check
-#   when: not python_force
+- name: Gather operating system / python info
+  ansible.builtin.include_tasks: gather.yml
 
 - name: Install python
-  include_tasks: install.yml
-  # when: >-
-  #   python_force | bool
-  #   or (not python_installation_check.stat.exists
-  #       and python_state == "present")
+  ansible.builtin.include_tasks: install.yml
+  when:
+    - python_install_required | bool
+    - python_state == "present"
 
 - name: Uninstall python
-  include_tasks: uninstall.yml
-  when: >-
-    python_force | bool
-    or (python_installation_check.stat.exists
-        and python_state == "absent")
+  ansible.builtin.include_tasks: uninstall.yml
+  when: python_state == "absent"

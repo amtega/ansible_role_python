@@ -2,24 +2,54 @@
 
 - name: Gather operating system release
   ansible.builtin.raw: >-
-    cat /etc/centos-release 2> /dev/null \
-    || cat /etc/redhat-release 2> /dev/null \
+    bash -c
+    "
+    cat /etc/centos-release 2> /dev/null
+    || cat /etc/redhat-release 2> /dev/null
     || cat /etc/fedora-release 2> /dev/null
+    | head -1
+    "
+
   args:
     warn: no
   changed_when: no
   failed_when: no
   register: python_os_result
 
-- name: Setup fact with operating system info
+- name: Gather python version info
+  ansible.builtin.raw: >-
+    bash -c
+    "
+    for p in /usr/bin/python3 /usr/bin/python2 /usr/bin/python ; do
+    /usr/bin/test -f $p && $p --version 2>&1 | cut -d' ' -f 2 ;
+    done | sort --version-sort --reverse | head -1
+    "
+  changed_when: no
+  failed_when: no
+  register: python_search_max_version_result
+
+- name: Check python installation
+  ansible.builtin.raw: "/usr/bin/test -f {{ python_executable_file_path }}"
+  register: python_executable_check
+  failed_when: no
+  changed_when: no
+
+- name: Setup facts with operating system info
   ansible.builtin.set_fact:
     python_distribution_name: >-
       {{ python_os_result.stdout
           | trim
-          | regex_replace(python_os_release_regex, "\1") }}
+          | regex_replace(python_os_release_regex, "\1")
+          | lower }}
     python_distribution_version: >-
       {{ python_os_result.stdout
           | trim
-          | regex_replace(python_os_release_regex, "\2") }}
+          | regex_replace(python_os_release_regex, "\2")
+          | lower }}
   vars:
-    python_os_release_regex: "([a-zA-Z ]+) release ([0-9.]+).*"
+    python_os_release_regex: "([a-zA-Z]+).* release ([0-9.]+).*"
+
+- name: Setup facts with operating python info
+  ansible.builtin.set_fact:
+    python_install_required: >-
+      {{ lookup("template", "install_required.yml.j2") | from_yaml }}

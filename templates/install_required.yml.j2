@@ -1,0 +1,19 @@
+{%- if python_version != "latest"
+       and python_executable_check.rc > 0
+       and python_search_max_version_result.stdout
+           is not version(python_version, "=") %}
+yes
+{%- elif python_version == "latest"
+         and ((not python_use_os_packages | bool
+               and python_executable_check.rc > 0)
+              or (python_use_os_packages | bool
+                  and python_distribution_version is version("7", "<")
+                  and python_executable_check.rc > 0)
+              or (python_use_os_packages | bool
+                  and python_search_max_version_result.stdout
+                      is not version(python_minimum_version, ">=")
+                  and python_distribution_version is version("7", ">="))) -%}
+yes
+{%- else -%}
+no
+{%- endif -%}

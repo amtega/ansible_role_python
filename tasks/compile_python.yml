@@ -2,17 +2,6 @@
 
 - name: Compile python
   block:
-    - name: Compile and install python
-      block:
-        - name: Setup fact with default artifact
-          ansible.builtin.set_fact:
-            python_default_artifact: "{{ python_default_artifact }}"
-
-        - name: Setup fact with python latest versions
-          ansible.builtin.set_fact:
-            python_latest_versions: "{{ python_download_site_versions }}"
-      when: python_artifact is undefined or python_version == "latest"
-
     - name: Gather package facts
       ansible.builtin.raw: >-
         /bin/bash -c
@@ -32,7 +21,7 @@
         if [ -f /usr/bin/dnf ]; then
         dnf install -y {{ python_os_dependencies | join(" ") }} ;
         else
-        yum install -y  {{ python_os_dependencies | join(" ") }} ;
+        yum install -y {{ python_os_dependencies | join(" ") }} ;
         fi
         "
       register: python_install_deps_result
@@ -41,7 +30,7 @@
       environment: "{{ proxy_client_environment | default({}) }}"
 
     - name: Setup source download directory
-      ansible.builtin.raw: "mkdir -pv {{ python_source_download_dir }}"
+      ansible.builtin.raw: "mkdir -pv {{ python_tmp_dir }}"
       args:
         warn: no
       register: python_setup_download_dir_result
@@ -63,23 +52,21 @@
       changed_when: python_download_result.stderr_lines | length > 0
       vars:
         python_artifact_path: >-
-          {{ python_source_download_dir }}/{{ python_download_file }}
+          {{ python_tmp_dir }}/{{ python_download_file }}
 
     - name: Configure python compilation
       ansible.builtin.raw: >-
         /bin/bash -c
         "
-        {{ python_compilation_env }} ;
-        cd {{ python_source_download_dir }} ;
+        {{ python_compile_env }} ;
+        cd {{ python_tmp_dir }} ;
         /bin/tar -zxvf {{ python_download_file }} ;
         cd {{ python_source_compile_dir }} ;
         ./configure {{ (python_compile_options
                         + ["--prefix="
-                           + python_install_dir
+                           + python_compiled_install_dir
                              | default(python_default_install_dir)]
-                        + ["--with-openssl="
-                           + openssl_install_dir
-                             | default(openssl_default_install_dir)])
+                        + python_extra_compile_options)
                        | list
                        | join(" ") }}
         "
@@ -89,7 +76,7 @@
       ansible.builtin.raw: >-
         /bin/bash -c
         "
-        {{ python_compilation_env }} ;
+        {{ python_compile_env }} ;
         cd {{ python_source_compile_dir }} ;
         make install
         "
@@ -100,7 +87,7 @@
         /bin/bash -c
         "
         export LANGUAGE=en_US ;
-        {{ python_pip_executable_file }} install virtualenv
+        {{ python_pip_executable_file_path }} install virtualenv
         "
       register: python_install_virtualenv_result
       changed_when: >-
