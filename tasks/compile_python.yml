@@ -87,7 +87,7 @@
         /bin/bash -c
         "
         export LANGUAGE=en_US ;
-        {{ python_pip_executable_file_path }} install virtualenv
+        {{ python_pip_executable_path }} install virtualenv
         "
       register: python_install_virtualenv_result
       changed_when: >-

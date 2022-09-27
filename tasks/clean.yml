@@ -7,9 +7,6 @@
   register: python_remove_tmp_result
   changed_when: python_remove_tmp_result.stdout_lines | length > 0
 
-- name: Remove python openssl ld config file
-  ansible.builtin.include_tasks: clean_ld_config.yml
-
 - name: Remove development tools
   ansible.builtin.raw: >-
     /bin/bash -c

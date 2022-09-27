@@ -28,8 +28,32 @@
   failed_when: no
   register: python_search_max_version_result
 
+- name: Check pip
+  ansible.builtin.raw: >-
+    bash -c
+    "
+    /usr/bin/test -f /usr/bin/pip3
+    || /usr/bin/test -f /usr/bin/pip3
+    || /usr/bin/test -f /usr/bin/pip
+    "
+  changed_when: no
+  failed_when: no
+  register: python_search_pip_result
+
+- name: Check virtualenv
+  ansible.builtin.raw: >-
+    bash -c
+    "
+    /usr/bin/test -f /usr/bin/virtualenv3
+    || /usr/bin/test -f /usr/bin/virtualenv2
+    || /usr/bin/test -f /usr/bin/virtualenv
+    "
+  changed_when: no
+  failed_when: no
+  register: python_search_virtualenv_result
+
 - name: Check python installation
-  ansible.builtin.raw: "/usr/bin/test -f {{ python_executable_file_path }}"
+  ansible.builtin.raw: "/usr/bin/test -f {{ python_executable_path }}"
   register: python_executable_check
   failed_when: no
   changed_when: no

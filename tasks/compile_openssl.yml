@@ -46,7 +46,7 @@
         cd {{ openssl_source_compile_dir }} ;
         make ;
         make install ;
-        echo "{{ openssl_default_install_dir }}/lib"
+        echo '{{ openssl_default_install_dir }}/lib'
         > {{ python_ld_conf_path }} ;
         ldconfig
         "

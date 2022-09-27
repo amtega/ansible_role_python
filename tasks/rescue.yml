@@ -3,6 +3,9 @@
 - name: Clean compilation artifacts
   ansible.builtin.include_tasks: clean.yml
 
+- name: Remove python openssl ld config file
+  ansible.builtin.include_tasks: clean_ld_config.yml
+
 - name: Stop role
   ansible.builtin.fail:
     msg: Cannot install development tools

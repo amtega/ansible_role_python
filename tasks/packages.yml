@@ -16,7 +16,7 @@
     python_install_package_result.stdout is not search("Nothing to do")
   environment: "{{ proxy_client_environment | default({}) }}"
 
-- name: Install python virtualenv / pip operating system package
+- name: Install python PIP / virtualenv operating system package
   ansible.builtin.raw: >-
     /bin/bash -c
     "
@@ -26,8 +26,9 @@
     /usr/bin/yum install -y python3-virtualenv python3-pip;
     else
     /usr/bin/yum install -y epel-release ;
-    /usr/bin/yum install -y python3-virtualenv python3-pip ;
-    /usr/bin/yum remove epel-release ;
+    /usr/bin/yum install -y python3-pip ;
+    /usr/bin/yum install -y python3-virtualenv ;
+    /usr/bin/yum remove -y epel-release ;
     fi
     "
   register: python_install_virtualenv_package_result
