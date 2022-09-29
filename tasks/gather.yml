@@ -84,7 +84,17 @@
 
     python_virtualenv_path: >-
       {{ python_build_install_dir | default(python_default_install_dir)
-         + "/bin/virtualenv" }}
+         + "/bin/"
+         + python_virtualenv_binary }}
+  vars:
+    python_virtualenv_binary: >-
+      {{ (_python_distribution_name | lower == "fedora"
+          or _python_distribution_version is version("7", "<")
+          or (_python_distribution_version is version("7", ">=")
+              and not python_use_os_packages | bool))
+         | ternary("virtualenv",
+                   "virtualenv-" + python_effective_version.split(".")[0]) }}
+
 
 - name: Check python installation
   ansible.builtin.raw: "/usr/bin/test -f {{ python_path }}"

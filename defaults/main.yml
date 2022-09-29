@@ -41,3 +41,7 @@ python_openssl_build_options:
   - "no-ssl2"
 
 python_openssl_ld_conf_file_name: ansible_python_openssl.conf
+
+# Gather python info only but do not install/uninstall
+
+python_gather_only: no

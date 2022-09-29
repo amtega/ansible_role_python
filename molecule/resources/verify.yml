@@ -2,10 +2,12 @@
 
 - name: Verify
   hosts: molecule_hosts
+  gather_facts: no
+  roles:
+    - role: amtega.python
+      vars:
+        python_gather_only: yes
   tasks:
-    - name: Gather info
-      ansible.builtin.include_tasks: ../../tasks/gather.yml
-
     - name: Check python
       ansible.builtin.raw: "{{ python_path }} --version"
       changed_when: no

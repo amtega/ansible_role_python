@@ -8,7 +8,10 @@
   when:
     - _python_install_required | bool
     - python_state == "present"
+    - not python_gather_only | bool
 
 - name: Uninstall python
   ansible.builtin.include_tasks: uninstall.yml
-  when: python_state == "absent"
+  when:
+    - python_state == "absent"
+    - not python_gather_only | bool

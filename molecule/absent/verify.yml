@@ -2,9 +2,11 @@
 
 - name: Common verify
   hosts: molecule_hosts
-  tasks:
-    - name: Gather info
-      ansible.builtin.include_tasks: ../../tasks/gather.yml
+  gather_facts: no
+  roles:
+    - role: amtega.python
+      vars:
+        python_gather_only: yes
 
 - name: Verify el hosts
   hosts: molecule_hosts:!molecule_hosts_centos_6:!molecule_hosts_fedora
