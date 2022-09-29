@@ -9,7 +9,7 @@
         if [ -f {{ openssl_artifact_path }} ]; then
         /bin/true ;
         else
-        /usr/bin/curl {{ openssl_download_url }}
+        /usr/bin/curl {{ python_openssl_download_url }}
         -o {{ openssl_artifact_path }} ;
         fi
         "
@@ -17,22 +17,22 @@
       changed_when: openssl_download_result.stderr_lines | length > 0
       vars:
         openssl_artifact_path: >-
-          {{ python_tmp_dir }}/{{ openssl_download_file }}
+          {{ python_tmp_dir }}/{{ python_openssl_download_file }}
 
-    - name: Configure openssl compilation
+    - name: Configure openssl build
       ansible.builtin.raw: >-
         /bin/bash -c
         "
         cd {{ python_tmp_dir }} ;
-        /bin/tar -zxvf {{ openssl_download_file }} ;
-        cd {{ openssl_source_compile_dir }} ;
-        ./config {{ (python_openssl_compile_options
+        /bin/tar -zxvf {{ python_openssl_download_file }} ;
+        cd {{ python_openssl_source_build_dir }} ;
+        ./config {{ (python_openssl_build_options
                       + ["--prefix="
-                        + openssl_compiled_install_dir
-                          | default(openssl_default_install_dir),
+                        + python_openssl_build_install_dir
+                          | default(python_openssl_default_install_dir),
                         "--openssldir="
-                        + openssl_compiled_install_dir
-                          | default(openssl_default_install_dir)])
+                        + python_openssl_build_install_dir
+                          | default(python_openssl_default_install_dir)])
                     | list
                     | join(" ") }}
         "
@@ -43,11 +43,11 @@
         /bin/bash -c
         "
         export LANGUAGE=en_US ;
-        cd {{ openssl_source_compile_dir }} ;
+        cd {{ python_openssl_source_build_dir }} ;
         make ;
         make install ;
-        echo '{{ openssl_default_install_dir }}/lib'
-        > {{ python_ld_conf_path }} ;
+        echo '{{ python_openssl_default_install_dir }}/lib'
+        > {{ python_openssl_ld_conf_path }} ;
         ldconfig
         "
       changed_when: yes

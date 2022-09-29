@@ -1,16 +1,14 @@
 ---
 
-# FIXME: sslonly in centos 6
-
-- name: Prepare compilation
+- name: Prepare build
   ansible.builtin.include_tasks: prepare.yml
 
 - name: Compile openssl
   ansible.builtin.include_tasks: compile_openssl.yml
-  when: python_distribution_version is version("7", "<")
+  when: _python_distribution_version is version("7", "<")
 
 - name: Compile python
   ansible.builtin.include_tasks: compile_python.yml
 
-- name: Clean after compilation
+- name: Clean after build
   ansible.builtin.include_tasks: clean.yml

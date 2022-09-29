@@ -5,7 +5,7 @@
 
 python_version: latest
 
-# OpenSSL version (only used if python compilation is required)
+# OpenSSL version (only used if python build is required)
 
 python_openssl_version: latest
 
@@ -14,7 +14,6 @@ python_openssl_version: latest
 python_use_os_packages: yes
 
 # State of python software. Can be present or absent
-# FIXME: Implement absent
 
 python_state: present
 
@@ -23,22 +22,22 @@ python_state: present
 
 python_use_proxy: no
 
-# Temporary directorry for compilation tasks
+# Temporary directorry for build tasks
 
 python_tmp_dir: /tmp/ansible_python
 
-# Compilation options
+# Build options
 
-# Directory where to install python/openssl if compilation is required.
+# Directory where to install python/openssl if build is required.
 # If not given will a default one will be used
 
-# python_compiled_install_dir: "/opt/python-{{ python_version }}"
-# openssl_compiled_install_dir: "/opt/openssl-{{ python_openssl_version }}"
+# python_build_install_dir: "/opt/python-{{ python_version }}"
+# python_openssl_build_install_dir: "/opt/openssl-{{ python_openssl_version }}"
 
-python_compile_options:
+python_build_options:
   - "--enable-optimizations"
 
-python_openssl_compile_options:
+python_openssl_build_options:
   - "no-ssl2"
 
 python_openssl_ld_conf_file_name: ansible_python_openssl.conf

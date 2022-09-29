@@ -1,6 +1,6 @@
 ---
 
-- name: Clean compilation artifacts
+- name: Clean build artifacts
   ansible.builtin.include_tasks: clean.yml
 
 - name: Remove python openssl ld config file

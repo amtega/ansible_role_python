@@ -6,7 +6,7 @@
 - name: Install python
   ansible.builtin.include_tasks: install.yml
   when:
-    - python_install_required | bool
+    - _python_install_required | bool
     - python_state == "present"
 
 - name: Uninstall python

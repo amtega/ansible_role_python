@@ -1,7 +1,7 @@
 ---
 
 - name: Remove python openssl ld config file
-  ansible.builtin.raw: "rm -fv {{ python_ld_conf_path }}"
+  ansible.builtin.raw: "rm -fv {{ python_openssl_ld_conf_path }}"
   args:
     warn: no
   register: python_remove_ld_conf_result

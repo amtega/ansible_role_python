@@ -1,23 +1,21 @@
 ---
 
-# FIXME: Why proxy_client_support_el_6 no
-
 - name: Setup proxy
   ansible.builtin.include_role:
     name: amtega.proxy_client
   vars:
     proxy_client_permanent: no
-    proxy_client_support_el_6: no
+    proxy_client_gather_facts: no
   when: python_use_proxy | bool
 
 - name: Compile openssl and python
   ansible.builtin.include_tasks: compile.yml
   when: >-
-    python_distribution_version is version("7", "<")
+    _python_distribution_version is version("7", "<")
     or not python_use_os_packages | bool
 
 - name: Install python using operating system packages
   ansible.builtin.include_tasks: packages.yml
   when:
     - python_use_os_packages | bool
-    - python_distribution_version is version("7", ">=")
+    - _python_distribution_version is version("7", ">=")

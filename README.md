@@ -6,6 +6,12 @@ This is an [Ansible](http://www.ansible.com) role to compile and install python 
 
 A list of all the default variables for this role is available in `defaults/main.yml`.
 
+The role setups the following facts:
+
+- `python_path`: path to python binary
+- `python_pip path`: path to python pip binary
+- `python_virtualenv_path`: path to python virtualenv binary
+
 ## Example Playbook
 
 This is an example playbook:
@@ -13,7 +19,7 @@ This is an example playbook:
 ``` yaml
 ---
 - hosts: localhost
-  roles:  
+  roles:
     - role: amtega.python
       vars:
         python_version: 3.9.7
@@ -22,7 +28,7 @@ This is an example playbook:
 
 ## Testing
 
-Tests are based on [molecule with docker containers](https://molecule.readthedocs.io/en/latest/installation.html).
+Tests are based on [molecule with podman containers](https://molecule.readthedocs.io/en/latest/installation.html).
 
 ```shell
 cd amtega.python

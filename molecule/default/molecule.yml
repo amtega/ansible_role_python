@@ -52,6 +52,7 @@ provisioner:
     converge: ../resources/converge.yml
     cleanup: ../resources/cleanup.yml
     side_effect: ../resources/side_effect.yml
+    verify: ../resources/verify.yml
   config_options:
     defaults:
       callbacks_enabled: profile_tasks

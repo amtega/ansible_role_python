@@ -7,7 +7,7 @@
         /bin/bash -c
         "
         export LANGUAGE=en_US ;
-        rpm -q {{ python_os_dependencies | join(' ') }}
+        rpm -q {{ python_build_os_dependencies | join(' ') }}
         "
       register: python_gather_packages_result
       changed_when: no
@@ -19,9 +19,9 @@
         "
         export LANGUAGE=en_US ;
         if [ -f /usr/bin/dnf ]; then
-        dnf install -y {{ python_os_dependencies | join(" ") }} ;
+        dnf install -y {{ python_build_os_dependencies | join(" ") }} ;
         else
-        yum install -y {{ python_os_dependencies | join(" ") }} ;
+        yum install -y {{ python_build_os_dependencies | join(" ") }} ;
         fi
         "
       register: python_install_deps_result
@@ -54,19 +54,19 @@
         python_artifact_path: >-
           {{ python_tmp_dir }}/{{ python_download_file }}
 
-    - name: Configure python compilation
+    - name: Configure python build
       ansible.builtin.raw: >-
         /bin/bash -c
         "
-        {{ python_compile_env }} ;
+        {{ python_build_env }} ;
         cd {{ python_tmp_dir }} ;
         /bin/tar -zxvf {{ python_download_file }} ;
-        cd {{ python_source_compile_dir }} ;
-        ./configure {{ (python_compile_options
+        cd {{ python_source_build_dir }} ;
+        ./configure {{ (python_build_options
                         + ["--prefix="
-                           + python_compiled_install_dir
+                           + python_build_install_dir
                              | default(python_default_install_dir)]
-                        + python_extra_compile_options)
+                        + python_extra_build_options)
                        | list
                        | join(" ") }}
         "
@@ -76,8 +76,8 @@
       ansible.builtin.raw: >-
         /bin/bash -c
         "
-        {{ python_compile_env }} ;
-        cd {{ python_source_compile_dir }} ;
+        {{ python_build_env }} ;
+        cd {{ python_source_build_dir }} ;
         make install
         "
       changed_when: yes
@@ -87,7 +87,7 @@
         /bin/bash -c
         "
         export LANGUAGE=en_US ;
-        {{ python_pip_executable_path }} install virtualenv
+        {{ python_pip_path }} install virtualenv
         "
       register: python_install_virtualenv_result
       changed_when: >-

@@ -16,7 +16,7 @@
         export LANGUAGE=en_US ;
         if [ ! -f {{ python_tmp_dir }}/packages ]; then
         rpm -q --queryformat='%{NAME}\n'
-        {{ python_os_dependencies | join(' ') }}
+        {{ python_build_os_dependencies | join(' ') }}
         > {{ python_tmp_dir }}/packages ;
         sed -i '/is not installed/d' {{ python_tmp_dir }}/packages ;
         fi ;
@@ -38,7 +38,7 @@
       register: python_install_dev_tools_result
       changed_when: >-
         python_install_dev_tools_result.stdout is not search("Nothing to do")
-      loop: "{{ python_os_dependencies }}"
+      loop: "{{ python_build_os_dependencies }}"
       loop_control:
         loop_var: python_dev_package
       environment: "{{ proxy_client_environment | default({}) }}"

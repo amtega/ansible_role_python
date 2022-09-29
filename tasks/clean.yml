@@ -28,6 +28,8 @@
         is not search("which is protected")
     and python_remove_dev_tools_result.stdout
         is not search("scriptlet failed")
-  loop: "{{ python_os_dependencies }}"
+    and python_remove_dev_tools_result.stderr
+        is not search("following protected packages")
+  loop: "{{ python_build_os_dependencies }}"
   loop_control:
     loop_var: python_dev_package

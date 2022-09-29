@@ -1,0 +1,19 @@
+---
+
+- name: Verify
+  hosts: molecule_hosts
+  tasks:
+    - name: Gather info
+      ansible.builtin.include_tasks: ../../tasks/gather.yml
+
+    - name: Check python
+      ansible.builtin.raw: "{{ python_path }} --version"
+      changed_when: no
+
+    - name: Check pip
+      ansible.builtin.raw: "{{ python_pip_path }} --version"
+      changed_when: no
+
+    - name: Check virtualenv
+      ansible.builtin.raw: "{{ python_virtualenv_path }} --version"
+      changed_when: no

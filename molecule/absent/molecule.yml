@@ -48,11 +48,9 @@ platforms:
 provisioner:
   name: ansible
   playbooks:
-    prepare: ../resources/prepare.yml
     converge: ../resources/converge.yml
     cleanup: ../resources/cleanup.yml
     side_effect: ../resources/side_effect.yml
-    verify: ../resources/verify.yml
   config_options:
     defaults:
       callbacks_enabled: profile_tasks
@@ -62,8 +60,7 @@ provisioner:
       molecule_hosts:
         vars:
           python_version: latest
-          python_state: present
-          python_use_os_packages: no
+          python_state: absent
       molecule_hosts_fedora:
         vars:
           ansible_python_interpreter: /usr/bin/python3

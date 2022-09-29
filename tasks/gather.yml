@@ -9,7 +9,6 @@
     || cat /etc/fedora-release 2> /dev/null
     | head -1
     "
-
   args:
     warn: no
   changed_when: no
@@ -20,8 +19,10 @@
   ansible.builtin.raw: >-
     bash -c
     "
-    for p in /usr/bin/python3 /usr/bin/python2 /usr/bin/python ; do
-    /usr/bin/test -f $p && $p --version 2>&1 | cut -d' ' -f 2 ;
+    for p in /usr/bin/python{{ python_effective_version.split(".")[0] }}
+    /usr/bin/python2
+    /usr/bin/python ; do
+    /usr/bin/test -f $p && echo $p,$($p --version 2>&1 | cut -d' ' -f 2) ;
     done | sort --version-sort --reverse | head -1
     "
   changed_when: no
@@ -32,9 +33,10 @@
   ansible.builtin.raw: >-
     bash -c
     "
-    /usr/bin/test -f /usr/bin/pip3
-    || /usr/bin/test -f /usr/bin/pip3
-    || /usr/bin/test -f /usr/bin/pip
+    ls -1 /usr/bin/pip{{ python_effective_version.split(".")[0] }}
+    2>/dev/null
+    || ls -1 /usr/bin/pip2 2>/dev/null
+    || ls -1 /usr/bin/pip 2>/dev/null
     "
   changed_when: no
   failed_when: no
@@ -44,28 +46,23 @@
   ansible.builtin.raw: >-
     bash -c
     "
-    /usr/bin/test -f /usr/bin/virtualenv3
-    || /usr/bin/test -f /usr/bin/virtualenv2
-    || /usr/bin/test -f /usr/bin/virtualenv
+    ls -1 /usr/bin/virtualenv{{ python_effective_version.split(".")[0] }}
+    2>/dev/null
+    || ls -1 /usr/bin/virtualenv2 2>/dev/null
+    || ls -1 /usr/bin/virtualenv 2>/dev/null
     "
   changed_when: no
   failed_when: no
   register: python_search_virtualenv_result
 
-- name: Check python installation
-  ansible.builtin.raw: "/usr/bin/test -f {{ python_executable_path }}"
-  register: python_executable_check
-  failed_when: no
-  changed_when: no
-
 - name: Setup facts with operating system info
   ansible.builtin.set_fact:
-    python_distribution_name: >-
+    _python_distribution_name: >-
       {{ python_os_result.stdout
           | trim
           | regex_replace(python_os_release_regex, "\1")
           | lower }}
-    python_distribution_version: >-
+    _python_distribution_version: >-
       {{ python_os_result.stdout
           | trim
           | regex_replace(python_os_release_regex, "\2")
@@ -73,7 +70,29 @@
   vars:
     python_os_release_regex: "([a-zA-Z]+).* release ([0-9.]+).*"
 
-- name: Setup facts with operating python info
+- name: Setup facts with python binaries paths
   ansible.builtin.set_fact:
-    python_install_required: >-
+    python_path: >-
+      {{ python_build_install_dir | default(python_default_install_dir)
+         + "/bin/python"
+         + python_effective_version.split(".")[0] }}
+
+    python_pip_path: >-
+      {{ python_build_install_dir | default(python_default_install_dir)
+         + "/bin/pip"
+         + python_effective_version.split(".")[0] }}
+
+    python_virtualenv_path: >-
+      {{ python_build_install_dir | default(python_default_install_dir)
+         + "/bin/virtualenv" }}
+
+- name: Check python installation
+  ansible.builtin.raw: "/usr/bin/test -f {{ python_path }}"
+  register: python_executable_check
+  failed_when: no
+  changed_when: no
+
+- name: Setup fact indicating if python install is required
+  ansible.builtin.set_fact:
+    _python_install_required: >-
       {{ lookup("template", "install_required.yml.j2") | from_yaml }}
