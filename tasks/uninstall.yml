@@ -1,6 +1,50 @@
 ---
 
-- name: Uninstall python
-  ansible.builtin.file:
-    path: "{{ python_install_dir | default(python_default_install_dir) }}"
-    state: absent
+- name: Remove python openssl ld config file
+  ansible.builtin.include_tasks: clean_ld_config.yml
+
+- name: Uninstall compiled python / openssl
+  ansible.builtin.raw: >-
+    bash -c
+    "
+    rm -Rfv
+    {{ python_build_install_dir
+       | default(python_default_install_dir) }} ;
+    rm -Rfv {{ python_openssl_build_install_dir
+       | default(python_openssl_default_install_dir) }}
+    "
+  when: >-
+    _python_distribution_version is version("7", "<")
+    or not python_use_os_packages | bool
+  register: python_uninstall_compiled_result
+  changed_when: python_uninstall_compiled_result.stdout_lines | length > 0
+
+- name: Uninstall python operating system packages
+  ansible.builtin.raw: >-
+    /bin/bash -c
+    "
+    export LANGUAGE=en_US ;
+    if [ -f /usr/bin/dnf ]; then
+    dnf remove -y {{ python_package }} ;
+    else
+    yum remove -y {{ python_package }} ;
+    fi
+    "
+  register: python_uninstall_package_result
+  when:
+    - python_use_os_packages | bool
+    - _python_distribution_version is version("7", ">=")
+  changed_when: >-
+    python_uninstall_package_result.stdout is search("Removed:")
+  failed_when: >-
+    python_uninstall_package_result.rc != 0
+    and python_uninstall_package_result.stderr
+        is not search("which is protected")
+    and python_uninstall_package_result.stderr
+        is not search("following protected packages")
+  loop:
+    - python3
+    - python3-pip
+    - python3-virtualenv
+  loop_control:
+    loop_var: python_package

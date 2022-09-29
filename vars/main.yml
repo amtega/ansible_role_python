@@ -2,20 +2,17 @@
 
 # Dependencies
 
-python_os_dependencies:
-  all:
-    all:
-      bzip2-devel: present
-      libffi-devel: present
-      make: present
-      findutils: present
-      gcc: present
-      openssl-devel: present
-      tcl-devel: present
-      yum-utils: present
-  centos:
-    7:
-      python-setuptools: present
+python_build_os_dependencies:
+  - bzip2-devel
+  - curl
+  - libffi-devel
+  - make
+  - findutils
+  - gcc
+  - openssl-devel
+  - tcl-devel
+  - yum-utils
+  - perl
 
 # Download info
 
@@ -40,40 +37,79 @@ python_download_site_versions: >-
 
 python_download_site_last_version: "{{ python_download_site_versions | last }}"
 
-python_default_artifact:
-  id: python
-  type: https
-  host: >-
-    {{ python_download_base_url | urlsplit('scheme')
-       + "://"
-       + python_download_base_url | urlsplit('hostname') }}
-  path: "{{ python_download_base_url | urlsplit('path') }}"
-  file: "{{ python_download_file }}"
-  dest: "{{ python_source_download_dir }}"
-  unarchive: yes
-  unarchive_remove: yes
+python_openssl_download_site: https://www.openssl.org/source
+
+python_openssl_download_site_content: >-
+  {{ lookup("url", python_openssl_download_site, wantlist=True) }}
+
+python_openssl_download_file: >-
+  {{ python_openssl_download_site_content
+     | select("search", ".*openssl-1.*tar.gz.*")
+     | map("regex_replace", ".*href=.(openssl-1.*.tar.gz).*", "\1")
+     | list
+     | first }}
+
+python_openssl_download_file_without_ext: >-
+  {{ python_openssl_download_file | regex_replace("\.tar\.gz", "") }}
+
+python_openssl_download_url: >-
+  {{ python_openssl_download_site }}/{{ python_openssl_download_file }}
 
 # Version variables
+
+python_minimum_version: 3.5.0
 
 python_effective_version: >-
   {{ (python_version == "latest")
      | ternary(python_download_site_last_version, python_version) }}
 
+python_openssl_effective_version: >-
+  {{ (python_openssl_version == "latest")
+     | ternary(python_openssl_download_file_without_ext
+               | regex_replace(".*-(.*)", "\1"), python_openssl_version) }}
+
+python_max_version_found: >-
+  {{ python_search_max_version_result.stdout.split(",").1 | default("0") }}
+
 # Directories
 
-python_source_compile_dir: >-
-  {{ python_source_download_dir }}/Python-{{ python_effective_version }}
+python_source_build_dir: >-
+  {{ python_tmp_dir }}/Python-{{ python_effective_version }}
 
-python_default_install_dir: "/opt/python-{{ python_effective_version }}"
+python_default_install_dir: >-
+  {{ (_python_distribution_version is version("7", "<")
+      or not python_use_os_packages | bool)
+     | ternary("/opt/python-" + python_effective_version, "/usr") }}
 
-# Executables
+python_openssl_source_build_dir: >-
+  {{ python_tmp_dir
+     + "/"
+     + python_openssl_download_file_without_ext }}
 
-python_executable_file: >-
-  {{ python_install_dir | default(python_default_install_dir)
-     + "/bin/python"
-     + python_effective_version.split('.')[0] }}
+python_openssl_default_install_dir: >-
+  /opt/openssl-{{ python_openssl_effective_version }}
 
-python_pip_executable_file: >-
-  {{ python_install_dir | default(python_default_install_dir)
-     + "/bin/pip"
-     + python_effective_version.split('.')[0] }}
+# Build vars
+
+python_openssl_build_env: >-
+  export PATH={{ python_openssl_default_install_dir }}/bin:$PATH ;
+  export LD_LIBRARY_PATH={{ python_openssl_default_install_dir }}/lib ;
+  export LD_FLAGS='-L{{ python_openssl_default_install_dir }}/lib
+  -Wl,-rpath,{{ python_openssl_default_install_dir }}/lib' ;
+  export LANGUAGE=en_US
+
+python_build_env: >-
+  {{ (_python_distribution_version is version("7", "<"))
+     | ternary(python_openssl_build_env, "/bin/true") }}
+
+python_python_openssl_build_options: >-
+  {{ ["--with-openssl="
+      + python_openssl_build_install_dir
+        | default(python_openssl_default_install_dir)] }}
+
+python_extra_build_options: >-
+  {{ (_python_distribution_version is version("7", "<"))
+     | ternary(python_python_openssl_build_options, []) }}
+
+python_openssl_ld_conf_path: >-
+  /etc/ld.so.conf.d/{{ python_openssl_ld_conf_file_name }}

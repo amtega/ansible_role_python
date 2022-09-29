@@ -5,103 +5,17 @@
     name: amtega.proxy_client
   vars:
     proxy_client_permanent: no
+    proxy_client_gather_facts: no
   when: python_use_proxy | bool
 
-- name: Install python
-  block:
-    - name: Compile and install python
-      block:
-        - name: Setup fact with default artifact
-          ansible.builtin.set_fact:
-            python_default_artifact: "{{ python_default_artifact }}"
+- name: Compile openssl and python
+  ansible.builtin.include_tasks: compile.yml
+  when: >-
+    _python_distribution_version is version("7", "<")
+    or not python_use_os_packages | bool
 
-        - name: Setup fact with python latest versions
-          ansible.builtin.set_fact:
-            python_latest_versions: "{{ python_download_site_versions }}"
-      when: python_artifact is undefined or python_version == "latest"
-
-    - name: Gather package facts
-      ansible.builtin.package_facts:
-
-    - name: Setup python dependencies
-      ansible.builtin.include_role:
-        name: amtega.packages
-      vars:
-        packages_os: "{{ python_os_dependencies }}"
-
-    - name: Setup source download dir
-      ansible.builtin.file:
-        path: "{{ python_source_download_dir }}"
-        state: directory
-        mode: 0755
-
-    - name: Download python source code
-      ansible.builtin.include_role:
-        name: amtega.artifact
-      vars:
-        overrides:
-          state: present
-        artifact: >-
-          {{ python_artifact
-             | default(python_default_artifact)
-             | combine(overrides) }}
-
-    - name: Configure compilation
-      ansible.builtin.command: >-
-        ./configure {{ (python_compile_options
-                        + ["--prefix="
-                           + python_install_dir
-                             | default(python_default_install_dir)])
-                       | list
-                       | join(" ") }}
-      args:
-        chdir: "{{ python_source_compile_dir }}"
-      changed_when: yes
-
-    - name: Compile and install python
-      ansible.builtin.command: make install
-      args:
-        chdir: "{{ python_source_compile_dir }}"
-      changed_when: yes
-
-    - name: Install virtualenv
-      ansible.builtin.pip:
-        name: virtualenv
-        state: present
-        executable: "{{ python_pip_executable_file }}"
-  always:
-    - name: Remove python source code
-      ansible.builtin.include_role:
-        name: amtega.artifact
-      vars:
-        overrides:
-          state: absent
-        artifact: >-
-          {{ python_artifact
-             | default(python_default_artifact)
-             | combine(overrides) }}
-
-    - name: Remove temporary source directories
-      ansible.builtin.file:
-        path: "{{ python_source_dir }}"
-        state: absent
-      loop:
-        - "{{ python_source_compile_dir }}"
-        - "{{ python_source_download_dir }}"
-      loop_control:
-        loop_var: python_source_dir
-
-    - name: Remove packages used for build
-      ansible.builtin.package:
-        name: >-
-          {{ (python_os_dependencies
-              [ansible_facts.distribution | lower]
-              [ansible_facts.distribution_major_version | int]
-              | default({})).keys() | list
-             + (python_os_dependencies
-                [ansible_facts.distribution | lower].all
-                | default({})).keys() | list
-             + (python_os_dependencies.all.all | default({})).keys() | list
-             | difference(ansible_facts.packages.keys() | list) }}
-        state: absent
-  environment: "{{ proxy_client_environment | default({}) }}"
+- name: Install python using operating system packages
+  ansible.builtin.include_tasks: packages.yml
+  when:
+    - python_use_os_packages | bool
+    - _python_distribution_version is version("7", ">=")
