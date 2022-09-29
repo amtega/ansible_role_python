@@ -1,0 +1,76 @@
+---
+
+- name: Common verify
+  hosts: molecule_hosts
+  gather_facts: no
+  roles:
+    - role: amtega.python
+      vars:
+        python_gather_only: yes
+
+- name: Verify el hosts
+  hosts: molecule_hosts:!molecule_hosts_centos_6:!molecule_hosts_fedora
+  gather_facts: no
+  tasks:
+    - name: Check python
+      ansible.builtin.command: "{{ python_path }} --version"
+      register: verify_python_result
+      changed_when: no
+      failed_when: verify_python_result.rc == 0
+
+    - name: Check pip
+      ansible.builtin.command: "{{ python_pip_path }} --version"
+      register: verify_pip_result
+      changed_when: no
+      failed_when: verify_pip_result.rc == 0
+
+    - name: Check virtualenv
+      ansible.builtin.command: "{{ python_virtualenv_path }} --version"
+      register: verify_virtualenv_result
+      changed_when: no
+      failed_when: verify_virtualenv_result.rc == 0
+
+- name: Verify virtualenv in fedora hosts
+  hosts: molecule_hosts_fedora
+  gather_facts: no
+  tasks:
+    - name: Check python
+      ansible.builtin.command: "{{ python_path }} --version"
+      changed_when: no
+
+    - name: Check pip
+      ansible.builtin.command: "{{ python_pip_path }} --version"
+      register: verify_pip_result
+      changed_when: no
+      failed_when: verify_pip_result.rc == 0
+
+    - name: Check virtualenv
+      ansible.builtin.command: "{{ python_virtualenv_path }} --version"
+      register: verify_virtualenv_result
+      changed_when: no
+      failed_when: verify_virtualenv_result.rc == 0
+
+- name: CentOS 6 verify
+  hosts: molecule_hosts_centos_6
+  gather_facts: no
+  tasks:
+    - name: Check python
+      ansible.builtin.command: "{{ python_path }} --version"
+      register: verify_python_result
+      changed_when: no
+      failed_when: verify_python_result.rc == 0
+
+
+    - name: Check pip
+      ansible.builtin.command: "{{ python_pip_path }} --version"
+      register: verify_pip_result
+      changed_when: no
+      failed_when: verify_pip_result.rc == 0
+
+    - name: Check virtualenv
+      ansible.builtin.command: "{{ python_virtualenv_path }} --version"
+      register: verify_virtualenv_result
+      changed_when: no
+      failed_when: verify_virtualenv_result.rc == 0
+  vars:
+    ansible_python_interpreter: "{{ python_path }}"

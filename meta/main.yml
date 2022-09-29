@@ -4,13 +4,14 @@ galaxy_info:
   role_name: python
   namespace: amtega
   author: José Enrique Mourón Regueira / Juan Antonio Valiño García
-  description: Compile and install python from source code
+  description: Install python
   company: AMTEGA - Xunta de Galicia
   license: GPLv3 or EUPL
   min_ansible_version: "2.10"
   platforms:
     - name: EL
       versions:
+        - "6"
         - "7"
         - "8"
     - name: Fedora
@@ -21,13 +22,6 @@ galaxy_info:
     - python
 
 dependencies:
-  - role: amtega.check_platform
-    vars:
-      check_platform_distributions:
-        centos: 7
-        fedora: 34
-        redhat: 7
-
   - role: amtega.proxy_client
     tags:
       - never

@@ -1,0 +1,9 @@
+---
+
+- name: Prepare
+  hosts: molecule_hosts
+  gather_facts: no
+  roles:
+    - role: amtega.python
+      vars:
+        python_state: present
