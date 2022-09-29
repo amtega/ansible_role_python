@@ -1,9 +1,17 @@
 ---
 # Role default lower priority variables
 
-# Version to install / remove
+# Python version
 
 python_version: latest
+
+# OpenSSL version (only used if python build is required)
+
+python_openssl_version: latest
+
+# Use operating system packages to install python if version is latest
+
+python_use_os_packages: yes
 
 # State of python software. Can be present or absent
 
@@ -14,30 +22,26 @@ python_state: present
 
 python_use_proxy: no
 
-# Download directorry
+# Temporary directorry for build tasks
 
-python_source_download_dir: /tmp/python_source
+python_tmp_dir: /tmp/ansible_python
 
-# Compile options
+# Build options
 
-python_compile_options:
+# Directory where to install python/openssl if build is required.
+# If not given will a default one will be used
+
+# python_build_install_dir: "/opt/python-{{ python_version }}"
+# python_openssl_build_install_dir: "/opt/openssl-{{ python_openssl_version }}"
+
+python_build_options:
   - "--enable-optimizations"
 
-# Directory that will contain the compiled binaries. If not given will a
-# default one will be used
+python_openssl_build_options:
+  - "no-ssl2"
 
-# python_install_dir:
+python_openssl_ld_conf_file_name: ansible_python_openssl.conf
 
-# By default, the role setups a default artifact that downloads the the desired
-# version (python_version) and stores this artifact in python_default_artifact
-# variable.
-#
-# If you want install from another site or a version not included in the version
-# archive page, you must provide an artifact variable with the download info for
-# .tar.gz binary you want deploy.
-#
-# Take a look to `amtega.artifact` role documentation to known about supported
-# types of artifacts, their specific settings and how to configure a proxy if
-# necessary
+# Gather python info only but do not install/uninstall
 
-# python_artifact:
+python_gather_only: no
