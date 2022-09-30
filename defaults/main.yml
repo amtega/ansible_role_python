@@ -22,6 +22,11 @@ python_state: present
 
 python_use_proxy: no
 
+# Indicate if `ansible_python_interpreter` must be pointed by the role to
+# python installed.
+
+python_set_ansible_interpreter: no
+
 # Temporary directorry for build tasks
 
 python_tmp_dir: /tmp/ansible_python
