@@ -19,3 +19,8 @@
   when:
     - python_use_os_packages | bool
     - _python_distribution_version is version("7", ">=")
+
+- name: Setup ansible python interpreter
+  ansible.builtin.set_fact:
+    ansible_python_interpreter: "{{ python_path }}"
+  when: python_set_ansible_interpreter | bool
