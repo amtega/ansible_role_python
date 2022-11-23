@@ -1,6 +1,6 @@
 ---
 
-- name: Gather operating system / python info
+- name: Gather system info
   ansible.builtin.include_tasks: gather.yml
 
 - name: Install python

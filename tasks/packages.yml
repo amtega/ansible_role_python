@@ -14,7 +14,11 @@
   register: python_install_package_result
   changed_when: >-
     python_install_package_result.stdout is not search("Nothing to do")
-  environment: "{{ proxy_client_environment | default({}) }}"
+  environment:
+    http_proxy: "{{ python_http_proxy | default('') }}"
+    https_proxy: "{{ python_https_proxy | default('') }}"
+    HTTP_PROXY: "{{ python_http_proxy | default('') }}"
+    HTTPS_PROXY: "{{ python_https_proxy | default('') }}"
 
 - name: Install python pip / virtualenv operating system package
   ansible.builtin.raw: >-
