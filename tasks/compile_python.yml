@@ -27,7 +27,11 @@
       register: python_install_deps_result
       changed_when: >-
         python_install_deps_result.stdout is not search("Nothing to do")
-      environment: "{{ proxy_client_environment | default({}) }}"
+      environment:
+        http_proxy: "{{ python_http_proxy | default('') }}"
+        https_proxy: "{{ python_https_proxy | default('') }}"
+        HTTP_PROXY: "{{ python_http_proxy | default('') }}"
+        HTTPS_PROXY: "{{ python_https_proxy | default('') }}"
 
     - name: Setup source download directory
       ansible.builtin.raw: "mkdir -pv {{ python_tmp_dir }}"
@@ -95,4 +99,3 @@
   rescue:
     - name: Rescue cleanup
       ansible.builtin.include_tasks: rescue.yml
-  environment: "{{ proxy_client_environment | default({}) }}"
