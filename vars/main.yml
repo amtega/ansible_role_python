@@ -89,6 +89,14 @@ python_openssl_source_build_dir: >-
 python_openssl_default_install_dir: >-
   /opt/openssl-{{ python_openssl_effective_version }}
 
+# Proxy vars
+
+python_proxy_env: >-
+  export http_proxy="{{ python_http_proxy | default('') }}" ;
+  export https_proxy="{{ python_https_proxy | default('') }}" ;
+  export HTTP_PROXY="{{ python_http_proxy | default('') }}" ;
+  export HTTPS_PROXY="{{ python_https_proxy | default('') }}"
+
 # Build vars
 
 python_openssl_build_env: >-
