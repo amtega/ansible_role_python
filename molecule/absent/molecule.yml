@@ -53,7 +53,7 @@ provisioner:
     side_effect: ../resources/side_effect.yml
   config_options:
     defaults:
-      callbacks_enabled: profile_tasks
+      callbacks_enabled: ansible.posix.profile_tasks
       action_plugins: $PWD/action_plugins
   inventory:
     hosts:
