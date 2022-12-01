@@ -18,6 +18,7 @@
         /bin/bash -c
         "
         export LANGUAGE=en_US ;
+        {{ python_proxy_env }} ;
         if [ -f /usr/bin/dnf ]; then
         dnf install -y {{ python_build_os_dependencies | join(" ") }} ;
         else
@@ -27,11 +28,6 @@
       register: python_install_deps_result
       changed_when: >-
         python_install_deps_result.stdout is not search("Nothing to do")
-      environment:
-        http_proxy: "{{ python_http_proxy | default('') }}"
-        https_proxy: "{{ python_https_proxy | default('') }}"
-        HTTP_PROXY: "{{ python_http_proxy | default('') }}"
-        HTTPS_PROXY: "{{ python_https_proxy | default('') }}"
 
     - name: Setup source download directory
       ansible.builtin.raw: "mkdir -pv {{ python_tmp_dir }}"
